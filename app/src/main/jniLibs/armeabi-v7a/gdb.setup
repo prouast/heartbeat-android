@@ -1,0 +1,2 @@
+set solib-search-path /Users/prouast/Developer/Android/Heartbeat/app/src/main/obj/local/armeabi-v7a
+directory /Users/prouast/Library/Android/sdk/ndk-bundle/platforms/android-14/arch-arm/usr/include /Users/prouast/Library/Android/sdk/ndk-bundle/sources/ffmpeg-2.2.3/android/arm/include /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl//gabi++/include /Users/prouast/Developer/Android/Heartbeat/app/src/main/jni /Users/prouast/Library/Android/sdk/ndk-bundle/sources/opencv

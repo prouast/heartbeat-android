@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+
+    package="com.prouast.heartbeat" >
+
+    <!-- START: Application specification -->
+    <application
+
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme">
+        <!--android:name="com.prouast.heartbeat"> -->
+        <!-- START: Define activities, services, broadcast _receivers_, content _providers_ -->
+
+        <activity android:name=".Main"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- END: Define activities, services, broadcast _receivers_, content _providers_ -->
+
+    </application>
+    <!-- END: Application specification -->
+
+    <!-- Screen support -->
+    <supports-screens android:resizeable="true"
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:anyDensity="true"/>
+
+    <!-- Declare minimum and maximum SKD requirement -->
+    <uses-sdk android:minSdkVersion="15" android:targetSdkVersion="23"/>
+
+    <!-- Ask for permission to use camera -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <!-- Ask for permission to use internet -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Declare which features this app uses -->
+    <uses-feature android:name="android.hardware.camera.front" android:required="true"/>
+    <uses-feature android:name="android.hardware.camera.front.autofocus" android:required="true"/>
+
+</manifest>
