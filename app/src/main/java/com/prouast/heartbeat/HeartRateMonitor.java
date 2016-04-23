@@ -3,7 +3,6 @@ package com.prouast.heartbeat;
 import android.content.Context;
 import android.util.Log;
 
-import org.apache.commons.io.FileUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -99,7 +98,7 @@ public class HeartRateMonitor {
     public interface HRMListener {
         void onHRMStarted();
         void onHRMStopped();
-        void onHRMResult(HRMResult result);
+        void onHRMResult(RPPGResult result);
     }
 
     /**
@@ -527,7 +526,7 @@ public class HeartRateMonitor {
             minBpm = bpms.get(0, 0)[0];
             maxBpm = bpms.get(bpms.rows()-1, 0)[0];
 
-            listener.onHRMResult(new HRMResult(now, meanBpm, minBpm, maxBpm));
+            listener.onHRMResult(new RPPGResult(now, meanBpm, minBpm, maxBpm));
 
             bpms.release();
             bpms = new MatOfDouble();

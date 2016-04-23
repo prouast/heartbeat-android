@@ -3,12 +3,11 @@ package com.prouast.heartbeat;
 /**
  * A result returned from the HeartRateMonitor
  */
-public class HRMResult {
+public class RPPGResult {
 
     private double mean = Double.NaN;
     private double min = Double.NaN;
     private double max = Double.NaN;
-
     private long time = 0L;
 
     /**
@@ -18,7 +17,7 @@ public class HRMResult {
      * @param min
      * @param max
      */
-    public HRMResult(long time, double mean, double min, double max) {
+    public RPPGResult(long time, double mean, double min, double max) {
         this.time = time;
         this.mean = mean;
         this.min = min;

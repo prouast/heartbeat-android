@@ -5,7 +5,7 @@ import android.util.Log;
 /**
  * Provides constants for the different types of network messages
  */
-public enum HRMNetworkMessageType {
+public enum RPPGNetworkMessageType {
 
     // Client signals that he is still listening to server
     HEARTBEAT,
@@ -20,15 +20,15 @@ public enum HRMNetworkMessageType {
     STOP;
 
     private static final String TAG = "Heartbeat::HRMNtwMsgTpe";
-    private static final HRMNetworkMessageType[] values = HRMNetworkMessageType.values();
+    private static final RPPGNetworkMessageType[] values = RPPGNetworkMessageType.values();
 
 
     /**
-     * Parse a HRMNetworkMessageType from an int
+     * Parse a RPPGNetworkMessageType from an int
      * @param i int
      * @return type
      */
-    public static HRMNetworkMessageType fromInt(int i) {
+    public static RPPGNetworkMessageType fromInt(int i) {
         try {
             return values[i];
         } catch (ArrayIndexOutOfBoundsException e) {

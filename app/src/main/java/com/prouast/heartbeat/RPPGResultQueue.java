@@ -5,21 +5,21 @@ import java.util.ArrayList;
 /**
  * A queue that holds HRMResults that have not yet been sent to the server
  */
-public class HRMResultQueue {
+public class RPPGResultQueue {
 
     // Singleton instance
-    private static HRMResultQueue instance;
+    private static RPPGResultQueue instance;
 
     // The queue
-    private ArrayList<HRMResult> queue;
+    private ArrayList<RPPGResult> queue;
 
     /**
      * Singleton pattern
      * @return instance
      */
-    public static HRMResultQueue getInstance() {
+    public static RPPGResultQueue getInstance() {
         if (instance == null) {
-            instance = new HRMResultQueue();
+            instance = new RPPGResultQueue();
         }
         return instance;
     }
@@ -27,7 +27,7 @@ public class HRMResultQueue {
     /**
      * Constructor instantiates
      */
-    private HRMResultQueue() {
+    private RPPGResultQueue() {
         queue = new ArrayList<>();
     }
 
@@ -35,7 +35,7 @@ public class HRMResultQueue {
      *
      * @return
      */
-    public synchronized HRMResult pop() {
+    public synchronized RPPGResult pop() {
         while (isEmpty()) {
             try {
                 wait();
@@ -44,14 +44,14 @@ public class HRMResultQueue {
             }
         }
 
-        HRMResult result = queue.get(0);
+        RPPGResult result = queue.get(0);
         queue.remove(result);
 
         notify();
         return result;
     }
 
-    public synchronized void push(HRMResult result) {
+    public synchronized void push(RPPGResult result) {
         queue.add(result);
         notify();
     }

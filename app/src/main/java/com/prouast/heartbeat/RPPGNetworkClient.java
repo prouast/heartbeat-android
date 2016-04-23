@@ -17,7 +17,7 @@ import java.nio.ByteBuffer;
  * Implements runnable and should be run on its own Thread
  * @author prouast
  */
-public class HRMNetworkClient implements Runnable {
+public class RPPGNetworkClient implements Runnable {
 
     private static final String TAG = "Heartbeat::HRMNetClient";
     private static final int SERVER_PORT = 8080;
@@ -42,10 +42,10 @@ public class HRMNetworkClient implements Runnable {
     }
 
     /**
-     * Constructor for a new HRMNetworkClient.
+     * Constructor for a new RPPGNetworkClient.
      * @param listener The listener
      */
-    public HRMNetworkClient(NetworkClientStateListener listener) {
+    public RPPGNetworkClient(NetworkClientStateListener listener) {
         this.isActive = false;
         this.listener = listener;
     }
@@ -85,11 +85,11 @@ public class HRMNetworkClient implements Runnable {
                 // Notify listener that connection to server was successful
                 listener.onNetworkConnected();
 
-                // Start thread for sending HRMResults when available from HRMResultQueue
+                // Start thread for sending HRMResults when available from RPPGResultQueue
                 Thread thread = new Thread() {
-                    HRMResultQueue queue = HRMResultQueue.getInstance();
+                    RPPGResultQueue queue = RPPGResultQueue.getInstance();
                     public void run() {
-                        HRMResult result;
+                        RPPGResult result;
                         while (isActive) {
                             result = queue.pop();
                             try {
@@ -115,14 +115,14 @@ public class HRMNetworkClient implements Runnable {
                         long timeReceivedByClient = System.currentTimeMillis();
 
                         // Read type of the message
-                        HRMNetworkMessageType type = HRMNetworkMessageType.fromInt(dis.readInt());
+                        RPPGNetworkMessageType type = RPPGNetworkMessageType.fromInt(dis.readInt());
 
                         switch (type) {
 
                             // Received a heartbeat request
                             case HEARTBEAT:
                                 Log.i(TAG, "Received heartbeat request");
-                                sendMsg(new byte[]{0}, HRMNetworkMessageType.HEARTBEAT);
+                                sendMsg(new byte[]{0}, RPPGNetworkMessageType.HEARTBEAT);
                                 Log.i(TAG, "Answered heartbeat request");
                                 break;
 
@@ -137,7 +137,7 @@ public class HRMNetworkClient implements Runnable {
                             // Received a stop request
                             case STOP:
                                 Log.i(TAG, "Received stop request");
-                                sendMsg(new byte[]{0}, HRMNetworkMessageType.STOP);
+                                sendMsg(new byte[]{0}, RPPGNetworkMessageType.STOP);
                                 Log.i(TAG, "Answered stop request");
                                 isActive = false;
                                 break;
@@ -175,10 +175,10 @@ public class HRMNetworkClient implements Runnable {
 
     /**
      * Send a message to server containing the heartrate and timestamp
-     * @param result The HRMResult
+     * @param result The RPPGResult
      * @throws IOException
      */
-    private void sendHeartrate(HRMResult result) throws IOException {
+    private void sendHeartrate(RPPGResult result) throws IOException {
         byte[] mean = toByteArray(result.getMean());
         byte[] min = toByteArray(result.getMin());
         byte[] max = toByteArray(result.getMax());
@@ -188,7 +188,7 @@ public class HRMNetworkClient implements Runnable {
         System.arraycopy(min,  0, msg, mean.length,                           min.length);
         System.arraycopy(max,  0, msg, mean.length + min.length,              max.length);
         System.arraycopy(time, 0, msg, mean.length + min.length + max.length, time.length);
-        sendMsg(msg, HRMNetworkMessageType.HEARTRATE);
+        sendMsg(msg, RPPGNetworkMessageType.HEARTRATE);
     }
 
     /**
@@ -202,7 +202,7 @@ public class HRMNetworkClient implements Runnable {
         byte[] msg = new byte[offset1.length + tClient.length];
         System.arraycopy(offset1, 0, msg, 0,              offset1.length);
         System.arraycopy(tClient, 0, msg, offset1.length, tClient.length);
-        sendMsg(msg, HRMNetworkMessageType.TIME_SYNC);
+        sendMsg(msg, RPPGNetworkMessageType.TIME_SYNC);
     }
 
     /**
@@ -211,7 +211,7 @@ public class HRMNetworkClient implements Runnable {
      * @param type The message type
      * @throws IOException
      */
-    private synchronized void sendMsg(byte[] msg, HRMNetworkMessageType type) throws IOException {
+    private synchronized void sendMsg(byte[] msg, RPPGNetworkMessageType type) throws IOException {
 
         if (msg == null)
             throw new IllegalArgumentException("Message cannot be null!");

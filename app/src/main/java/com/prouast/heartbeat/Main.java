@@ -8,8 +8,6 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
-import org.opencv.core.Size;
-import org.opencv.videoio.VideoWriter;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -36,10 +34,10 @@ import java.util.regex.Pattern;
 /**
  * The main class.
  */
-public class Main extends AppCompatActivity implements CvCameraViewListener2, HeartRateMonitor.HRMListener, HRMNetworkClient.NetworkClientStateListener {
+public class Main extends AppCompatActivity implements CvCameraViewListener2, RPPGSimple.RPPGListener, RPPGNetworkClient.NetworkClientStateListener {
 
     /* Settings */
-    private static final int SAMPLING_FREQUENCY = 60;
+    private static final int SAMPLING_FREQUENCY = 1;
     private static final int RESCAN_INTERVAL = 1;
     private static final boolean LOG = false;
     private static final boolean VIDEO = false;
@@ -53,8 +51,9 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, He
                     "((25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[0-9])){0,1}$");
 
     private CameraBridgeViewBase mOpenCvCameraView;
-    private HeartRateMonitor monitor;
-    private HRMResultQueue queue;
+    //private HeartRateMonitor monitor;
+    private RPPGSimple rPPG;
+    private RPPGResultQueue queue;
     private Mat mRgba;
     private Mat mGray;
     private long now;
@@ -62,7 +61,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, He
     private FFmpegEncoder encoder;
     private File videoFile;
 
-    private HRMNetworkClient client = null;
+    private RPPGNetworkClient client = null;
     private String serverAddress = null;
     private boolean clientConnected = false;
 
@@ -77,58 +76,21 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, He
                     // Load native library after(!) OpenCV initialization
                     System.loadLibrary("opencv_java3");
 
+                    /*
                     try {
 
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
 
-                        InputStream is = getResources().openRawResource(R.raw.haarcascade_frontalface_alt);
-
-                        File mFrontalFaceCascadeFile = new File(cascadeDir, "haarcascade_frontalface_alt.xml");
-
-                        FileOutputStream os = new FileOutputStream(mFrontalFaceCascadeFile);
-
-                        byte[] buffer = new byte[4096];
-                        int bytesRead;
-                        while ((bytesRead = is.read(buffer)) != -1) {
-                            os.write(buffer, 0, bytesRead);
-                        }
-                        is.close();
-                        os.close();
-
-                        is = getResources().openRawResource(R.raw.haarcascade_lefteye_2splits);
-
-                        File mLeftEyeCascadeFile = new File(cascadeDir, "haarcascade_lefteye_2splits.xml");
-
-                        os = new FileOutputStream(mLeftEyeCascadeFile);
-
-                        buffer = new byte[4096];
-                        while ((bytesRead = is.read(buffer)) != -1) {
-                            os.write(buffer, 0, bytesRead);
-                        }
-                        is.close();
-                        os.close();
-
-                        is = getResources().openRawResource(R.raw.haarcascade_righteye_2splits);
-
-                        File mRightEyeCascadeFile = new File(cascadeDir, "haarcascade_righteye_2splits.xml");
-
-                        os = new FileOutputStream(mRightEyeCascadeFile);
-
-                        buffer = new byte[4096];
-                        while ((bytesRead = is.read(buffer)) != -1) {
-                            os.write(buffer, 0, bytesRead);
-                        }
-                        is.close();
-                        os.close();
-
-                        monitor.loadClassifiers(mFrontalFaceCascadeFile.getAbsolutePath(), mLeftEyeCascadeFile.getAbsolutePath(), mRightEyeCascadeFile.getAbsolutePath());
+                        monitor.loadClassifiers(
+                                loadCascadeFile(cascadeDir, R.raw.haarcascade_frontalface_alt, "haarcascade_frontalface_alt.xml"),
+                                loadCascadeFile(cascadeDir, R.raw.haarcascade_lefteye_2splits, "haarcascade_lefteye_2splits.xml"),
+                                loadCascadeFile(cascadeDir, R.raw.haarcascade_righteye_2splits, "haarcascade_righteye_2splits.xml"));
 
                         cascadeDir.delete();
 
                     } catch (IOException e) {
-                        e.printStackTrace();
                         Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
-                    }
+                    } */
 
                     mOpenCvCameraView.enableView();
                 } break;
@@ -139,6 +101,23 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, He
             }
         }
     };
+
+    private String loadCascadeFile(File cascadeDir, int id, String filename) throws IOException {
+
+        InputStream is = getResources().openRawResource(id);
+        File cascadeFile = new File(cascadeDir, filename);
+        FileOutputStream os = new FileOutputStream(cascadeFile);
+
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = is.read(buffer)) != -1) {
+            os.write(buffer, 0, bytesRead);
+        }
+        is.close();
+        os.close();
+
+        return cascadeFile.getAbsolutePath();
+    }
 
     static {
         try {
@@ -180,9 +159,9 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, He
         mOpenCvCameraView.setCvCameraViewListener(this);
 
         // Initialise the Network client, result queue and Heartrate monitor
-        client = new HRMNetworkClient(this);
-        queue = HRMResultQueue.getInstance();
-        monitor = new HeartRateMonitor(this, getApplicationContext(), SAMPLING_FREQUENCY, RESCAN_INTERVAL, LOG, DRAW);
+        client = new RPPGNetworkClient(this);
+        queue = RPPGResultQueue.getInstance();
+        //monitor = new HeartRateMonitor(this, getApplicationContext(), SAMPLING_FREQUENCY, RESCAN_INTERVAL, LOG, DRAW);
 
         // Initialise the video file and encoder
         if (VIDEO) {
@@ -214,7 +193,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, He
         if (mOpenCvCameraView != null) {
             mOpenCvCameraView.disableView();
         }
-        monitor.clearHRM();
+        //monitor.clearHRM();
     }
 
     /**
@@ -304,8 +283,23 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, He
             }
         }
 
-        // Prepare HRM
-        monitor.prepareHRM(width, height);
+        File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+
+        // Initialise rPPG
+        try {
+            rPPG = new RPPGSimple(
+                    this, width, height, SAMPLING_FREQUENCY, RESCAN_INTERVAL,
+                    getApplicationContext().getExternalFilesDir(null).getAbsolutePath(),
+                    loadCascadeFile(cascadeDir, R.raw.haarcascade_frontalface_alt, "haarcascade_frontalface_alt.xml"),
+                    loadCascadeFile(cascadeDir, R.raw.haarcascade_lefteye_2splits, "haarcascade_lefteye_2splits.xml"),
+                    loadCascadeFile(cascadeDir, R.raw.haarcascade_righteye_2splits, "haarcascade_righteye_2splits.xml"),
+                    LOG, DRAW
+                    );
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
+        }
+
+        cascadeDir.delete();
     }
 
     /**
@@ -327,8 +321,9 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, He
             encoder.writeFrame(mRgba.dataAddr(), now);
         }
 
-        // Send the frame to the monitor for processing
-        monitor.processFrame(mRgba, mGray, now);
+        // Send the frame to rPPG for processing
+        //monitor.processFrame(mRgba, mGray, now);
+        rPPG.processFrame(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr(), now);
 
         return mRgba;
     }
@@ -350,35 +345,22 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, He
         // Release resources
         mGray.release();
         mRgba.release();
-        monitor.clearHRM();
+        //monitor.clearHRM();
+        rPPG.exit();
     }
 
-    /* HRMListener methods */
-
-    /**
-     * Called when the HRM has been started
-     */
-    public void onHRMStarted() {
-
-    }
-
-    /**
-     * Called when the HRM has been stopped
-     */
-    public void onHRMStopped() {
-
-    }
+    /* PRRGListener methods */
 
     /**
      * Called when a result from the HRM is delivered
-     * @param result the HRMResult
+     * @param result the RPPGResult
      */
-    public void onHRMResult(HRMResult result) {
+    public void onRPPGResult(RPPGResult result) {
         // Push the result to the queue
         if (client.isActive) {
             queue.push(result);
         }
-        //Log.i(TAG, "BPM=" + result.getBpm());
+        Log.i(TAG, "RPPGResult: " + result.getMean());
     }
 
     /* NetworkClientStateListener methods */
