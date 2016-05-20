@@ -10,10 +10,18 @@ extern "C" {
 /*
  * Class:     com_prouast_heartbeat_RPPGSimple
  * Method:    _initialise
- * Signature: (Lcom/prouast/heartbeat/RPPGSimple/RPPGListener;IIIILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZ)J
+ * Signature: ()J
  */
 JNIEXPORT jlong JNICALL Java_com_prouast_heartbeat_RPPGSimple__1initialise
-  (JNIEnv *, jclass, jobject, jint, jint, jint, jint, jstring, jstring, jstring, jstring, jboolean, jboolean);
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_prouast_heartbeat_RPPGSimple
+ * Method:    _load
+ * Signature: (JLcom/prouast/heartbeat/RPPGSimple/RPPGListener;IIDIILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZ)V
+ */
+JNIEXPORT void JNICALL Java_com_prouast_heartbeat_RPPGSimple__1load
+  (JNIEnv *, jclass, jlong, jobject, jint, jint, jdouble, jint, jint, jstring, jstring, jstring, jstring, jboolean, jboolean);
 
 /*
  * Class:     com_prouast_heartbeat_RPPGSimple

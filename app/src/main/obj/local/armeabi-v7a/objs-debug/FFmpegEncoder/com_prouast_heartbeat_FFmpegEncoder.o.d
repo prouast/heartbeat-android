@@ -1,7 +1,7 @@
-/Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/obj/local/armeabi-v7a/objs-debug/FFmpegEncoder/com_prouast_heartbeat_FFmpegEncoder.o: \
- /Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/jni/com_prouast_heartbeat_FFmpegEncoder.cpp \
- /Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/jni/com_prouast_heartbeat_FFmpegEncoder.h \
- /Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/jni/FFmpegEncoder.hpp \
+/Users/prouast/Developer/Android/Heartbeat/app/src/main/obj/local/armeabi-v7a/objs-debug/FFmpegEncoder/com_prouast_heartbeat_FFmpegEncoder.o: \
+ /Users/prouast/Developer/Android/Heartbeat/app/src/main/jni/com_prouast_heartbeat_FFmpegEncoder.cpp \
+ /Users/prouast/Developer/Android/Heartbeat/app/src/main/jni/com_prouast_heartbeat_FFmpegEncoder.h \
+ /Users/prouast/Developer/Android/Heartbeat/app/src/main/jni/FFmpegEncoder.hpp \
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stdio.h \
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/string \
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stl/_prolog.h \
@@ -137,9 +137,9 @@
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/ffmpeg-2.2.3/android/arm/include/libavutil/imgutils.h \
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/ffmpeg-2.2.3/android/arm/include/libavutil/pixdesc.h
 
-/Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/jni/com_prouast_heartbeat_FFmpegEncoder.h:
+/Users/prouast/Developer/Android/Heartbeat/app/src/main/jni/com_prouast_heartbeat_FFmpegEncoder.h:
 
-/Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/jni/FFmpegEncoder.hpp:
+/Users/prouast/Developer/Android/Heartbeat/app/src/main/jni/FFmpegEncoder.hpp:
 
 /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stdio.h:
 

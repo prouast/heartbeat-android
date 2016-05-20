@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merger version="3"><dataSet config="main"><source path="/Users/prouast/Developer/Android/Heartbeat/libraries/opencv/src/main/assets"/></dataSet><dataSet config="debug"><source path="/Users/prouast/Developer/Android/Heartbeat/libraries/opencv/src/debug/assets"/></dataSet></merger>
+<merger version="3"><dataSet config="main"><source path="/Users/prouast/Developer/Android/Heartbeat/libraries/opencv/src/main/assets"/><source path="/Users/prouast/Developer/Android/Heartbeat/libraries/opencv/build/generated/assets/shaders/debug"/></dataSet><dataSet config="debug"><source path="/Users/prouast/Developer/Android/Heartbeat/libraries/opencv/src/debug/assets"/></dataSet></merger>

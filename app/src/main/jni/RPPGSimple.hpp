@@ -14,20 +14,24 @@
 #include <fstream>
 #include <opencv2/objdetect/objdetect.hpp>
 
+#include <jni.h>
+
 class RPPGSimple {
     
 public:
 
     // Constructor
-    RPPGSimple(const jobject listener, JNIEnv *jenv,
-               const int width, const int height,
-               const double timeBase,
-               const int samplingFrequency, const int rescanInterval,
-               const std::string &logFileName,
-               const std::string &faceClassifierFilename,
-               const std::string &leftEyeClassifierFilename,
-               const std::string &rightEyeClassifierFilename,
-               const bool log, const bool draw);
+    RPPGSimple() : jvm(NULL) {;}
+
+    void load(//jobject listener, JNIEnv *jenv,
+               int width);//, int height,
+               //double timeBase,
+               //int samplingFrequency, int rescanInterval,
+               //const char *logFileName,
+               //const char *faceClassifierFilename,
+               //const char *leftEyeClassifierFilename,
+               //onst char *rightEyeClassifierFilename,
+               //bool log, bool draw);
 
     void exit();
     void processFrame(cv::Mat &frameRGB, cv::Mat &frameGray, long time);
@@ -41,11 +45,11 @@ private:
     void extractSignal_den_detr_mean();
     void extractSignal_den_band();
     void estimateHeartrate();
-    void callback();
+    void callback(long now, double meanBpm, double minBpm, double maxBpm);
     void draw(cv::Mat &frameRGB);
 
     // The JavaVM
-    static JavaVM *jvm;
+    JavaVM *jvm;
 
     // The listener
     jobject listener;

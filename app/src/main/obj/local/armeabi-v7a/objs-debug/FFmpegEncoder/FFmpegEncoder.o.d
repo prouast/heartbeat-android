@@ -1,6 +1,6 @@
-/Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/obj/local/armeabi-v7a/objs-debug/FFmpegEncoder/FFmpegEncoder.o: \
- /Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/jni/FFmpegEncoder.cpp \
- /Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/jni/FFmpegEncoder.hpp \
+/Users/prouast/Developer/Android/Heartbeat/app/src/main/obj/local/armeabi-v7a/objs-debug/FFmpegEncoder/FFmpegEncoder.o: \
+ /Users/prouast/Developer/Android/Heartbeat/app/src/main/jni/FFmpegEncoder.cpp \
+ /Users/prouast/Developer/Android/Heartbeat/app/src/main/jni/FFmpegEncoder.hpp \
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stdio.h \
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stl/_cprolog.h \
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stl/config/features.h \
@@ -151,7 +151,7 @@
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/iostream \
  /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stl/_ioserr.h
 
-/Users/prouast/Developer/Android/Heartbeat_r4/app/src/main/jni/FFmpegEncoder.hpp:
+/Users/prouast/Developer/Android/Heartbeat/app/src/main/jni/FFmpegEncoder.hpp:
 
 /Users/prouast/Library/Android/sdk/ndk-bundle/sources/cxx-stl/stlport/stlport/stdio.h:
 

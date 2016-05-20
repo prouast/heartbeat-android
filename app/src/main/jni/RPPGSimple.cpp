@@ -21,52 +21,54 @@ using namespace std;
 #define SIGNAL_SIZE 10
 #define SEC_PER_MIN 60
 
-RPPGSimple::RPPGSimple(const jobject listener, JNIEnv *jenv,
-                       const int width, const int height,
-                       const double timeBase,
-                       const int samplingFrequency, const int rescanInterval,
-                       const string &logFileName,
-                       const string &faceClassifierFilename,
-                       const string &leftEyeClassifierFilename,
-                       const string &rightEyeClassifierFilename,
-                       const bool jlog, const bool jdraw) {
+void RPPGSimple::load(//jobject listener, JNIEnv *jenv,
+                       //JNIEnv *jenv,
+                       int width)//, int height,
+                       //double timeBase,
+                       //int samplingFrequency, int rescanInterval,
+                       //const char *logFileName,
+                       //const char *faceClassifierFilename,
+                       //const char *leftEyeClassifierFilename,
+                       //const char *rightEyeClassifierFilename,
+                       //bool jlog, bool jdraw)
+                       {
 
-    this->minFaceSize = cv::Size(cv::min(width, height) * REL_MIN_FACE_SIZE, cv::min(width, height) * REL_MIN_FACE_SIZE);
-    this->rescanInterval = rescanInterval;
-    this->samplingFrequency = samplingFrequency;
-    this->timeBase = timeBase;
-    this->logMode = log;
-    this->drawMode = draw;
-    this->updateFlag = false;
-    this->mask = cv::Mat::zeros(height, width, CV_8UC1);
+    //this->minFaceSize = cv::Size(cv::min(width, height) * REL_MIN_FACE_SIZE, cv::min(width, height) * REL_MIN_FACE_SIZE);
+    //this->rescanInterval = rescanInterval;
+    //this->samplingFrequency = samplingFrequency;
+    //this->timeBase = timeBase;
+    //this->logMode = jlog;
+    //this->drawMode = jdraw;
+    //this->updateFlag = false;
+    //this->mask = cv::Mat::zeros(height, width, CV_8UC1);
 
     // Save reference to Java VM
-    (*jenv)->GetJavaVM(jenv, &jvm);
+    //jenv->GetJavaVM(&jvm);
 
     // Save listener object
-    this->listener = listener
+    //this->listener = listener;
 
     // Load classifiers
-    faceClassifier.load(faceClassifierFilename);
-    leftEyeClassifier.load(rightEyeClassifierFilename);
-    rightEyeClassifier.load(leftEyeClassifierFilename);
+    //faceClassifier.load(faceClassifierFilename);
+    //leftEyeClassifier.load(rightEyeClassifierFilename);
+    //rightEyeClassifier.load(leftEyeClassifierFilename);
 
     // Setting up logfilepath
-    std::ostringstream path_1;
-    path_1 << logFileName << "_simple";
-    this->logfilepath = path_1.str();
+    //std::ostringstream path_1;
+    //path_1 << logFileName << "_simple";
+    //this->logfilepath = path_1.str();
 
     // Logging bpm according to sampling frequency
-    std::ostringstream path_2;
-    path_2 << logfilepath << "_bpm.csv";
-    logfile.open(path_2.str());
-    logfile << "time;mean;min;max\n";
+    //std::ostringstream path_2;
+    //path_2 << logfilepath << "_bpm.csv";
+    //logfile.open(path_2.str());
+    //logfile << "time;mean;min;max\n";
 
     // Logging bpm detailed
-    std::ostringstream path_3;
-    path_3 << logfilepath << "_bpmDetailed.csv";
-    logfileDetailed.open(path_3.str());
-    logfileDetailed << "time;bpm\n";
+    //std::ostringstream path_3;
+    //path_3 << logfilepath << "_bpmDetailed.csv";
+    //logfileDetailed.open(path_3.str());
+    //logfileDetailed << "time;bpm\n";
 }
 
 void RPPGSimple::exit() {
@@ -131,7 +133,7 @@ void RPPGSimple::processFrame(cv::Mat &frameRGB, cv::Mat &frameGray, long time) 
             estimateHeartrate();
         }
         
-        draw(frame);
+        draw(frameRGB);
     }
 }
 
@@ -252,18 +254,18 @@ void RPPGSimple::extractSignal_den_detr_mean() {
 
     // Logging
     if (logMode) {
-        std::ofstream log;
+        std::ofstream logf;
         std::ostringstream filepath;
         filepath << logfilepath << "_signal_" << time << ".csv";
-        log.open(filepath.str());
-        log << "g;g_den;g_detr;g_avg\n";
+        logf.open(filepath.str().c_str());
+        logf << "g;g_den;g_detr;g_avg\n";
         for (int i = 0; i < g.rows; i++) {
-            log << g.at<double>(i, 0) << ";";
-            log << signalDenoised.at<double>(i, 0) << ";";
-            log << signalDetrended.at<double>(i, 0) << ";";
-            log << signalMeaned.at<double>(i, 0) << "\n";
+            logf << g.at<double>(i, 0) << ";";
+            logf << signalDenoised.at<double>(i, 0) << ";";
+            logf << signalDetrended.at<double>(i, 0) << ";";
+            logf << signalMeaned.at<double>(i, 0) << "\n";
         }
-        log.close();
+        logf.close();
     }
 }
 
@@ -294,18 +296,18 @@ void RPPGSimple::estimateHeartrate() {
         
         // Logging
         if (logMode) {
-            std::ofstream log;
+            std::ofstream logf;
             std::ostringstream filepath;
             filepath << logfilepath << "_estimation_" << time << ".csv";
-            log.open(filepath.str());
-            log << "i;powerSpectrum\n";
+            logf.open(filepath.str().c_str());
+            logf << "i;powerSpectrum\n";
             for (int i = 0; i < powerSpectrum.rows; i++) {
                 if (low <= i && i <= high) {
-                    log << i << ";";
-                    log << powerSpectrum.at<float>(i, 0) << "\n";
+                    logf << i << ";";
+                    logf << powerSpectrum.at<float>(i, 0) << "\n";
                 }
             }
-            log.close();
+            logf.close();
         }
         
         logfileDetailed << time << ";";
@@ -339,36 +341,44 @@ void RPPGSimple::estimateHeartrate() {
 
 void RPPGSimple::callback(long now, double meanBpm, double minBpm, double maxBpm) {
 
-    JNIEnv *jenv;
-    int stat = jvm->GetEnv((void **)&jenv, JNI_VERSION_1_6);
-    if (stat == JNI_EDETACHED) {
-        std::cout << "GetEnv: not attached" << std::endl;
-        if (g_vm->AttachCurrentThread((void **) &g_env, NULL) != 0) {
-            std::cout << "Failed to attach" << std::endl;
-        }
-    } else if (getEnvStat == JNI_OK) {
-        //
-    } else if (getEnvStat == JNI_EVERSION) {
-        std::cout << "GetEnv: version not supported" << std::endl;
-    }
+    //JNIEnv *jenv;
+    //int stat = jvm->GetEnv((void **)&jenv, JNI_VERSION_1_6);
 
-    // Get the Listener class reference
-    jclass listenerClassRef = jenv->GetObjectClass(listener);
+    //if (stat == JNI_EDETACHED) {
+    //    std::cout << "GetEnv: not attached" << std::endl;
+    //    if (jvm->AttachCurrentThread((void **) &jenv, NULL) != 0) {
+    //        std::cout << "Failed to attach" << std::endl;
+    //    }
+    //} else if (stat == JNI_OK) {
+    //    //
+    //} else if (stat == JNI_EVERSION) {
+    //    std::cout << "GetEnv: version not supported" << std::endl;
+    //}
 
-    // Use Listener class reference to load the eventOccurred method
-    jmethodID listenerEventOccured = ENV->GetMethodID(listenerClassRef, "onRPPGResult", "(LRPPGResult;)V");
+    // Return object
 
-    // Get Info class reference
-    jclass infoClsRef = jenv->FindClass("RPPGResult");
+    // Get Return object class reference
+    //jclass returnObjectClassRef = jenv->FindClass("RPPGResult");
+
+    // Get Return object constructor method
+    //jmethodID constructorMethodID = jenv->GetMethodID(returnObjectClassRef, "<init>", "(JDDD)V");
 
     // Create Info class
-    jobject info_instance = jenv->NewObject(infoClsRef, now, meanBpm, minBpm, maxBpm);
+    //jobject returnObject = jenv->NewObject(returnObjectClassRef, constructorMethodID, now, meanBpm, minBpm, maxBpm);
+
+    // Listener
+
+    // Get the Listener class reference
+    //jclass listenerClassRef = jenv->GetObjectClass(listener);
+
+    // Use Listener class reference to load the eventOccurred method
+    //jmethodID listenerEventOccuredMethodID = jenv->GetMethodID(listenerClassRef, "onRPPGResult", "(Lcom/prouast/heartbeat/RPPGResult;)V");
 
     // Invoke listener eventOccurred
-    jenv->CallVoidMethod(saved_listener_instance, listenerEventOccured, info_instance);
+    //jenv->CallVoidMethod(listener, listenerEventOccuredMethodID, returnObject);
 
     // Cleanup
-    jenv->DeleteLocalRef(info_instance);
+    //jenv->DeleteLocalRef(returnObject);
 }
 
 void RPPGSimple::draw(cv::Mat &frameRGB) {

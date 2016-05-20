@@ -9,12 +9,16 @@ public class RPPGSimple {
         void onRPPGResult(RPPGResult result);
     }
 
-    public RPPGSimple(RPPGListener listener,
-                      int width, int height,
-                      int samplingFrequency, int rescanInterval,
-                      String logFilePath, String faceClassifierFilename, String leftEyeClassifierFilename, String rightEyeClassifierFilename,
-                      boolean log, boolean draw) {
-        self = _initialise(listener, width, height, samplingFrequency, rescanInterval, logFilePath, faceClassifierFilename, leftEyeClassifierFilename, rightEyeClassifierFilename, log, draw);
+    public RPPGSimple() {
+        self = _initialise();
+    }
+
+    public void load(RPPGListener listener,
+                     int width, int height,
+                     int samplingFrequency, int rescanInterval,
+                     String logFilePath, String faceClassifierFilename, String leftEyeClassifierFilename, String rightEyeClassifierFilename,
+                     boolean log, boolean draw) {
+        _load(self, listener, width, height, 0.001, samplingFrequency, rescanInterval, logFilePath, faceClassifierFilename, leftEyeClassifierFilename, rightEyeClassifierFilename, log, draw);
     }
 
     public void exit() {
@@ -26,7 +30,8 @@ public class RPPGSimple {
     }
 
     private long self = 0;
-    private static native long _initialise(RPPGListener listener, int width, int height, int samplingFrequency, int rescanInterval, String logFilePath, String faceClassifierFilename, String leftEyeClassifierFilename, String rightEyeClassifierFilename, boolean log, boolean draw);
+    private static native long _initialise();
+    private static native void _load(long self, RPPGListener listener, int width, int height, double timeBase, int samplingFrequency, int rescanInterval, String logFilePath, String faceClassifierFilename, String leftEyeClassifierFilename, String rightEyeClassifierFilename, boolean log, boolean draw);
     private static native void _processFrame(long self, long frameRGB, long frameGray, long now);
     private static native void _exit(long self);
 }

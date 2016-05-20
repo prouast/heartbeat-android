@@ -74,7 +74,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
                     Log.i(TAG, "OpenCV loaded successfully");
 
                     // Load native library after(!) OpenCV initialization
-                    System.loadLibrary("opencv_java3");
+                    System.loadLibrary("RPPGSimple");
 
                     /*
                     try {
@@ -121,6 +121,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
 
     static {
         try {
+            System.loadLibrary("");
             System.loadLibrary("avformat-55");
             System.loadLibrary("avcodec-55");
             System.loadLibrary("avutil-52");
@@ -286,6 +287,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
 
         // Initialise rPPG
+        /*
         try {
             rPPG = new RPPGSimple(
                     this, width, height, SAMPLING_FREQUENCY, RESCAN_INTERVAL,
@@ -297,7 +299,9 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
                     );
         } catch (IOException e) {
             Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
-        }
+        } */
+
+        rPPG = new RPPGSimple();
 
         cascadeDir.delete();
     }
