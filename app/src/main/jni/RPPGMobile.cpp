@@ -36,9 +36,7 @@ bool RPPGMobile::load(jobject listener, JNIEnv *jenv,
                       const double timeBase,
                       const int samplingFrequency, const int rescanInterval,
                       const string &logFileName,
-                      const string &faceClassifierFilename,
-                      const string &leftEyeClassifierFilename,
-                      const string &rightEyeClassifierFilename,
+                      const string &classifierFilename,
                       const bool log, const bool draw) {
     
     this->minFaceSize = cv::Size(cv::min(width, height) * REL_MIN_FACE_SIZE, cv::min(width, height) * REL_MIN_FACE_SIZE);
@@ -56,9 +54,7 @@ bool RPPGMobile::load(jobject listener, JNIEnv *jenv,
     this->listener = jenv->NewGlobalRef(listener);
 
     // Load classifiers
-    faceClassifier.load(faceClassifierFilename);
-    leftEyeClassifier.load(rightEyeClassifierFilename);
-    rightEyeClassifier.load(leftEyeClassifierFilename);
+    classifier.load(classifierFilename);
     
     // Setting up logfilepath
     std::ostringstream path_1;
@@ -167,14 +163,13 @@ void RPPGMobile::detectFace(cv::Mat &frameRGB, cv::Mat &frameGray) {
     
     // Detect faces with Haar classifier
     std::vector<cv::Rect> boxes;
-    faceClassifier.detectMultiScale(frameGray, boxes, 1.1, 2, CV_HAAR_SCALE_IMAGE, minFaceSize);
+    classifier.detectMultiScale(frameGray, boxes, 1.1, 2, CV_HAAR_SCALE_IMAGE, minFaceSize);
     
     if (boxes.size() > 0) {
         
         LOGD("Found a face");
         
         setNearestBox(boxes);
-        detectEyes(frameRGB);
         detectCorners(frameGray);
         updateMask(frameGray);
         valid = true;
@@ -200,48 +195,6 @@ void RPPGMobile::setNearestBox(std::vector<cv::Rect> boxes) {
         }
     }
     box = boxes.at(index);
-}
-
-void RPPGMobile::detectEyes(cv::Mat &frameRGB) {
-    
-    Rect leftEyeROI = Rect(box.tl().x + box.width/16,
-                           box.tl().y + box.height/4.5,
-                           (box.width - 2*box.width/16)/2,
-                           box.height/3.0);
-    
-    Rect rightEyeROI = Rect(box.tl().x + box.width/16 + (box.width - 2*box.width/16)/2,
-                            box.tl().y + box.height/4.5,
-                            (box.width - 2*box.width/16)/2,
-                            box.height/3.0);
-    
-    Mat leftSub = frameRGB(leftEyeROI);
-    Mat rightSub = frameRGB(rightEyeROI);
-    
-    // Detect eyes with Haar classifier
-    std::vector<cv::Rect> eyeBoxesLeft;
-    leftEyeClassifier.detectMultiScale(leftSub, eyeBoxesLeft, 1.1, 2, 0);
-    std::vector<cv::Rect> eyeBoxesRight;
-    rightEyeClassifier.detectMultiScale(rightSub, eyeBoxesRight, 1.1, 2, 0);
-    
-    if (eyeBoxesLeft.size() > 0) {
-        Rect leftEye = eyeBoxesLeft.at(0);
-        Point tl = Point(leftEyeROI.x + leftEye.x, leftEyeROI.y + leftEye.y);
-        Point br = Point(leftEyeROI.x + leftEye.x + leftEye.width,
-                         leftEyeROI.y + leftEye.y + leftEye.height);
-        this->leftEye = Rect(tl, br);
-    } else {
-        LOGD("No left eye found");
-    }
-    
-    if (eyeBoxesRight.size() > 0) {
-        Rect rightEye = eyeBoxesRight.at(0);
-        Point tl = Point(rightEyeROI.x + rightEye.x, rightEyeROI.y + rightEye.y);
-        Point br = Point(rightEyeROI.x + rightEye.x + rightEye.width,
-                         rightEyeROI.y + rightEye.y + rightEye.height);
-        this->rightEye = Rect(tl, br);
-    } else {
-        LOGD("No right eye found");
-    }
 }
 
 void RPPGMobile::detectCorners(cv::Mat &frameGray) {
@@ -320,22 +273,6 @@ void RPPGMobile::trackFace(cv::Mat &frameGray) {
         cv::transform(boxCoords, transformedBoxCoords, transform);
         box = Rect(transformedBoxCoords[0], transformedBoxCoords[1]);
 
-        // Update left eye
-        Contour2f leftEyeCoords;
-        leftEyeCoords.push_back(leftEye.tl());
-        leftEyeCoords.push_back(leftEye.br());
-        Contour2f transformedLeftEyeCoords;
-        cv::transform(leftEyeCoords, transformedLeftEyeCoords, transform);
-        leftEye = Rect(transformedLeftEyeCoords[0], transformedLeftEyeCoords[1]);
-
-        // Update right eye
-        Contour2f rightEyeCoords;
-        rightEyeCoords.push_back(rightEye.tl());
-        rightEyeCoords.push_back(rightEye.br());
-        Contour2f transformedRightEyeCoords;
-        cv::transform(rightEyeCoords, transformedRightEyeCoords, transform);
-        rightEye = Rect(transformedRightEyeCoords[0], transformedRightEyeCoords[1]);
-
         // Update ROI
         Contour2f roiCoords;
         roiCoords.push_back(roi.tl());
@@ -355,35 +292,10 @@ void RPPGMobile::updateMask(cv::Mat &frameGray) {
     
     LOGD("Update mask");
 
-    // TODO define only with box? Could save myself detecting the eyes
-
     mask = cv::Mat::zeros(frameGray.rows, frameGray.cols, CV_8UC1);
-
-    Point leftEyeCenter = Point(leftEye.tl().x + leftEye.width/2, leftEye.tl().y + leftEye.height/2);
-    Point rightEyeCenter = Point(rightEye.tl().x + rightEye.width/2, rightEye.tl().y + rightEye.height/2);
-    double d = (rightEyeCenter.x - leftEyeCenter.x)/4.0;
-
-    this->roi = Rect(leftEyeCenter.x + 0.5 * d, leftEyeCenter.y - 2.5 * d, 3 * d, 1.5 * d);
-
-    mask.setTo(BLACK);
-    rectangle(mask, roi, WHITE, FILLED);
-
-    /*
-
-    mask = cv::Mat::zeros(frameGray.rows, frameGray.cols, CV_8UC1);
-    mask.setTo(BLACK); // TODO needed?
-    ellipse(mask,
-            Point(box.tl().x + box.width/2.0, box.tl().y + box.height/2.0),
-            Size(box.width/2.5, box.height/2.0),
-            0, 0, 360, WHITE, FILLED);
-    circle(mask,
-           Point(leftEye.tl().x + leftEye.width/2.0, leftEye.tl().y + leftEye.height/2.0),
-           (leftEye.width + leftEye.height)/4.0, BLACK, FILLED);
-    circle(mask,
-           Point(rightEye.tl().x + rightEye.width/2.0, rightEye.tl().y + rightEye.height/2.0),
-           (rightEye.width + rightEye.height)/4.0, BLACK, FILLED);
-
-    */
+    this->roi = Rect(Point(box.tl().x + 0.3 * box.width, box.tl().y + 0.1 * box.height),
+                     Point(box.tl().x + 0.7 * box.width, box.tl().y + 0.25 * box.height));
+    rectangle(mask, this->roi, WHITE, FILLED);
 }
 
 void RPPGMobile::extractSignal() {
@@ -614,15 +526,7 @@ void RPPGMobile::draw(cv::Mat &frameRGB) {
             Point(box.tl().x + box.width / 2.0, box.tl().y + box.height / 2.0),
             Size(box.width / 2.5, box.height / 2.0),
             0, 0, 360, cv::GREEN);
-    circle(frameRGB,
-           Point(leftEye.tl().x + leftEye.width / 2.0, leftEye.tl().y + leftEye.height / 2.0),
-           (leftEye.width + leftEye.height) / 4.0,
-           cv::GREEN);
-    circle(frameRGB,
-           Point(rightEye.tl().x + rightEye.width / 2.0, rightEye.tl().y + rightEye.height / 2.0),
-           (rightEye.width + rightEye.height) / 4.0,
-           cv::GREEN);
-    
+
     // Draw signal
     if (!signal.empty() && !powerSpectrum.empty()) {
         

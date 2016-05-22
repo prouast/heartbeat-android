@@ -18,10 +18,10 @@ JNIEXPORT jlong JNICALL Java_com_prouast_heartbeat_RPPGMobile__1initialise
 /*
  * Class:     com_prouast_heartbeat_RPPGMobile
  * Method:    _load
- * Signature: (JLcom/prouast/heartbeat/RPPGMobile/RPPGListener;IIDIILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZ)V
+ * Signature: (JLcom/prouast/heartbeat/RPPGMobile/RPPGListener;IIDIILjava/lang/String;Ljava/lang/String;ZZ)V
  */
 JNIEXPORT void JNICALL Java_com_prouast_heartbeat_RPPGMobile__1load
-  (JNIEnv *, jclass, jlong, jobject, jint, jint, jdouble, jint, jint, jstring, jstring, jstring, jstring, jboolean, jboolean);
+  (JNIEnv *, jclass, jlong, jobject, jint, jint, jdouble, jint, jint, jstring, jstring, jboolean, jboolean);
 
 /*
  * Class:     com_prouast_heartbeat_RPPGMobile

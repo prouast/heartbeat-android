@@ -275,8 +275,6 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
             rPPG.load(this, width, height, SAMPLING_FREQUENCY, RESCAN_INTERVAL,
                     getApplicationContext().getExternalFilesDir(null).getAbsolutePath(),
                     loadCascadeFile(cascadeDir, R.raw.haarcascade_frontalface_alt, "haarcascade_frontalface_alt.xml"),
-                    loadCascadeFile(cascadeDir, R.raw.haarcascade_lefteye_2splits, "haarcascade_lefteye_2splits.xml"),
-                    loadCascadeFile(cascadeDir, R.raw.haarcascade_righteye_2splits, "haarcascade_righteye_2splits.xml"),
                     LOG, DRAW);
             Log.i(TAG, "Loaded rPPG");
         } catch (IOException e) {

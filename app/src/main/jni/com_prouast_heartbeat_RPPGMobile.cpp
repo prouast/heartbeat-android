@@ -41,23 +41,20 @@ JNIEXPORT jlong JNICALL Java_com_prouast_heartbeat_RPPGMobile__1initialise
 /*
  * Class:     com_prouast_heartbeat_RPPGMobile
  * Method:    _load
- * Signature: (JLcom/prouast/heartbeat/RPPGMobile/RPPGListener;IIDIILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZ)V
+ * Signature: (JLcom/prouast/heartbeat/RPPGMobile/RPPGListener;IIDIILjava/lang/String;Ljava/lang/String;ZZ)V
  */
 JNIEXPORT void JNICALL Java_com_prouast_heartbeat_RPPGMobile__1load
   (JNIEnv *jenv, jclass, jlong self, jobject jlistener, jint jwidth, jint jheight, jdouble jtimeBase, jint jsamplingFrequency, jint jrescanInterval,
-      jstring jlogFilePath, jstring jfaceClassifierFilename, jstring jleftEyeClassifierFilename, jstring jrightEyeClassifierFilename, jboolean jlog, jboolean jdraw) {
+      jstring jlogFilePath, jstring jclassifierFilename, jboolean jlog, jboolean jdraw) {
     LOGD("Java_com_prouast_heartbeat_RPPGMobile__1load enter");
     bool log = jlog;
     bool draw = jdraw;
-    std::string logFilePath, faceClassifierFilename, leftEyeClassifierFilename, rightEyeClassifierFilename;
+    std::string logFilePath, classifierFilename;
     try {
       GetJStringContent(jenv, jlogFilePath, logFilePath);
-      GetJStringContent(jenv, jfaceClassifierFilename, faceClassifierFilename);
-      GetJStringContent(jenv, jleftEyeClassifierFilename, leftEyeClassifierFilename);
-      GetJStringContent(jenv, jrightEyeClassifierFilename, rightEyeClassifierFilename);
+      GetJStringContent(jenv, jclassifierFilename, classifierFilename);
       ((RPPGMobile *)self)->load(jlistener, jenv, jwidth, jheight, jtimeBase, jsamplingFrequency, jrescanInterval,
-                                 logFilePath, faceClassifierFilename, leftEyeClassifierFilename, rightEyeClassifierFilename,
-                                 log, draw);
+                                 logFilePath, classifierFilename, log, draw);
     } catch (...) {
       jclass je = jenv->FindClass("java/lang/Exception");
       jenv->ThrowNew(je, "Unknown exception in JNI code.");

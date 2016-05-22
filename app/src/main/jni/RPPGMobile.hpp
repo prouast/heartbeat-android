@@ -29,9 +29,7 @@ public:
               const double timeBase,
               const int samplingFrequency, const int rescanInterval,
               const std::string &logFileName,
-              const std::string &faceClassifierFilename,
-              const std::string &leftEyeClassifierFilename,
-              const std::string &rightEyeClassifierFilename,
+              const std::string &classifierFilename,
               const bool log, const bool draw);
     
     void processFrame(cv::Mat &frameRGB, cv::Mat &frameGray, int64_t time);
@@ -63,9 +61,7 @@ private:
     jobject listener;
 
     // The classifiers
-    cv::CascadeClassifier faceClassifier;
-    cv::CascadeClassifier leftEyeClassifier;
-    cv::CascadeClassifier rightEyeClassifier;
+    cv::CascadeClassifier classifier;
     
     // Settings
     cv::Size minFaceSize;
@@ -90,8 +86,6 @@ private:
     
     // Mask
     cv::Rect box;
-    cv::Rect rightEye;
-    cv::Rect leftEye;
     cv::Mat mask;
     cv::Rect roi;
     
