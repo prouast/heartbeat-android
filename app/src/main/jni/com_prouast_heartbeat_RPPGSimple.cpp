@@ -9,6 +9,16 @@
 #define LOG_TAG "Heartbeat::RPPGSimple"
 #define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
 
+void GetJStringContent(JNIEnv *AEnv, jstring AStr, std::string &ARes) {
+  if (!AStr) {
+    ARes.clear();
+    return;
+  }
+  const char *s = AEnv->GetStringUTFChars(AStr,NULL);
+  ARes=s;
+  AEnv->ReleaseStringUTFChars(AStr,s);
+}
+
 /*
  * Class:     com_prouast_heartbeat_RPPGSimple
  * Method:    _initialise
@@ -39,13 +49,15 @@ JNIEXPORT void JNICALL Java_com_prouast_heartbeat_RPPGSimple__1load
   LOGD("Java_com_prouast_heartbeat_RPPGSimple__1load enter");
   bool log = jlog;
   bool draw = jdraw;
+  std::string logFilePath, faceClassifierFilename, leftEyeClassifierFilename, rightEyeClassifierFilename;
   try {
-      ((RPPGSimple *)self)->load(jwidth);//, jheight, jtimeBase, jsamplingFrequency, jrescanInterval,
-                                 //GetJStringContent(jlogFilePath),
-                                 //GetJStringContent(jfaceClassifierFilename),
-                                 //GetJStringContent(jleftEyeClassifierFilename),
-                                 //GetJStringContent(jrightEyeClassifierFilename),
-                                 //log, draw);
+      GetJStringContent(jenv, jlogFilePath, logFilePath);
+      GetJStringContent(jenv, jfaceClassifierFilename, faceClassifierFilename);
+      GetJStringContent(jenv, jleftEyeClassifierFilename, leftEyeClassifierFilename);
+      GetJStringContent(jenv, jrightEyeClassifierFilename, rightEyeClassifierFilename);
+      ((RPPGSimple *)self)->load(jlistener, jenv, jwidth, jheight, jtimeBase, jsamplingFrequency, jrescanInterval,
+                                 logFilePath, faceClassifierFilename, leftEyeClassifierFilename, rightEyeClassifierFilename,
+                                 log, draw);
   } catch (...) {
       jclass je = jenv->FindClass("java/lang/Exception");
       jenv->ThrowNew(je, "Unknown exception in JNI code.");
@@ -62,7 +74,8 @@ JNIEXPORT void JNICALL Java_com_prouast_heartbeat_RPPGSimple__1processFrame
   (JNIEnv *jenv, jclass, jlong self, jlong jframeRGB, jlong jframeGray, jlong jtime) {
   LOGD("Java_com_prouast_heartbeat_RPPGSimple__1processFrame enter");
   try {
-      ((RPPGSimple *)self)->processFrame(*((cv::Mat*)jframeRGB), *((cv::Mat*)jframeGray), jtime);
+      int64_t time = jtime;
+      ((RPPGSimple *)self)->processFrame(*((cv::Mat*)jframeRGB), *((cv::Mat*)jframeGray), time);
   } catch (...) {
       jclass je = jenv->FindClass("java/lang/Exception");
       jenv->ThrowNew(je, "Unknown exception in JNI code.");
@@ -79,20 +92,10 @@ JNIEXPORT void JNICALL Java_com_prouast_heartbeat_RPPGSimple__1exit
   (JNIEnv *jenv, jclass, jlong self) {
     LOGD("Java_com_prouast_heartbeat_RPPGSimple__1exit enter");
     try {
-        ((RPPGSimple *)self)->exit();
+        ((RPPGSimple *)self)->exit(jenv);
     } catch (...) {
         jclass je = jenv->FindClass("java/lang/Exception");
         jenv->ThrowNew(je, "Unknown exception in JNI code.");
     }
     LOGD("Java_com_prouast_heartbeat_RPPGSimple__1exit exit");
-}
-
-void GetJStringContent(JNIEnv *AEnv, jstring AStr, std::string &ARes) {
-  if (!AStr) {
-    ARes.clear();
-    return;
-  }
-  const char *s = AEnv->GetStringUTFChars(AStr,NULL);
-  ARes=s;
-  AEnv->ReleaseStringUTFChars(AStr,s);
 }

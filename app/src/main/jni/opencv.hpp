@@ -31,16 +31,17 @@ namespace cv {
     void plot(cv::Mat &mat);
     
     /* FILTERS */
-    
-    //void denoiseFilter(cv::InputArray _a, cv::OutputArray _b, double fps, double rescanInterval);
-    void denoiseFilter2(cv::InputArray _a, cv::OutputArray _b, cv::Mat &jumps);
-    void detrendFilter(cv::InputArray _a, cv::OutputArray _b, int lambda);
-    void bandpassFilter(cv::InputArray _a, cv::OutputArray _b, double low, double high);
-    void meanFilter(cv::InputArray _a, cv::OutputArray _b, int n, int s);
+
+    void normalization(cv::InputArray _a, cv::OutputArray _b);
+    void denoise(cv::InputArray _a, cv::OutputArray _b, cv::Mat &jumps);
+    void detrend(cv::InputArray _a, cv::OutputArray _b, int lambda);
+    void movingAverage(cv::InputArray _a, cv::OutputArray _b, int n, int s);
+    void bandpass(cv::InputArray _a, cv::OutputArray _b, double low, double high);
     void butterworth_bandpass_filter(cv::Mat &filter, double cutin, double cutoff, int n);
     void butterworth_lowpass_filter(cv::Mat &filter, double cutoff, int n);
     void frequencyToTime(cv::InputArray _a, cv::OutputArray _b);
     void timeToFrequency(cv::InputArray _a, cv::OutputArray _b, bool magnitude);
+    void xminay(cv::InputArray _r, cv::InputArray _g, cv::InputArray _b, double low, double high, cv::OutputArray _s);
     
     /* LOGGING */
     
