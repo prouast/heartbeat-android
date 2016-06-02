@@ -47,6 +47,139 @@ namespace cv {
         }
     }
 
+    bool * validate(InputArray _a, InputArray _b, bool flags[]) {
+
+        static bool result[3] = {true, true, true};
+
+        Mat a = _a.getMat(), b = _b.getMat();
+
+        if (a.rows < 10) {
+            return result;
+        }
+
+        for (int i = 0; i < a.cols; i++) {
+            result[i] = validate(a.col(i), b.col(i), flags[i]);
+        }
+
+        return result;
+    }
+
+    bool validate(InputArray _a, InputArray _b, bool &flag) {
+
+        Mat a = _a.getMat(), b = _b.getMat();
+
+        CV_Assert(a.type() == CV_64F && b.type() == CV_8U);
+
+        // Calculate differences
+        Mat1d diff;
+        subtract(a.rowRange(1, a.rows), a.rowRange(0, a.rows-1), diff);
+
+        // Calculate sd of differences
+        Scalar mean_diff;
+        Scalar stddev_diff;
+        Mat mask = Mat::ones(diff.rows, diff.cols, CV_8UC1);
+        mask.at<bool>(mask.rows-1, 0) = false;
+        meanStdDev(diff, mean_diff, stddev_diff, mask);
+
+        // Last frame was classified as good
+        if (b.at<bool>(b.rows-1, 0)) {
+
+            // Latest deviation is larger than twice the standard deviation
+            if (abs(diff.at<double>(diff.rows-1)) > 2 * stddev_diff[0]) {
+
+                // Last deviation flagged as possibly noise
+                if (flag) {
+
+                    // Confirm noise
+                    flag = false; // reset flag
+                    std::cout << "there is noise" << std::endl;
+                    return false;
+
+                } else {
+
+                    // Flag as possibly noise
+                    flag = true; // set flag
+                    std::cout << "there might be noise" << std::endl;
+                    return true;
+                }
+
+            } else {
+
+                // No noise
+                flag = false; // reset flag
+                std::cout << "no noise" << std::endl;
+                return true;
+            }
+
+        } else {
+
+            // Latest deviation is larger than the standard deviation
+            if (abs(diff.at<double>(diff.rows-1)) > stddev_diff[0]) {
+
+                // Classify as noise
+                flag = false; // reset flag
+                std::cout << "still noise" << std::endl;
+                return false;
+
+            } else {
+
+                // Last deviation flagged as possibly no noise anymore
+                if (flag) {
+
+                    // Confirm that there is no noise anymore
+                    flag = false; // reset flag
+                    std::cout << "no noise anymore" << std::endl;
+                    return true;
+
+                } else {
+
+                    // Flag as possibly no noise anymore
+                    flag = true; // set flag
+                    std::cout << "noise might have stopped" << std::endl;
+                    return false;
+                }
+            }
+        }
+    }
+
+    void crop(InputArray _s, InputArray _v, OutputArray _r, bool mode[]) {
+
+        Mat s = _s.getMat(), v = _v.getMat();
+        CV_Assert(s.type() == CV_64F && v.type() == CV_8U);
+
+        Mat1d s_;
+
+        // Determine the valid range
+        int i = s.rows-1;
+        while ((mode[0] ? v.at<bool>(i, 0) : true) &&
+               (mode[1] ? v.at<bool>(i, 1) : true) &&
+               (mode[2] ? v.at<bool>(i, 2) : true) &&
+               i > 0) {
+            i--;
+        }
+
+        // Add valid range to cropped signal
+        s.rowRange(i, s.rows).copyTo(_r);
+    }
+
+    void crop1(InputArray _a, InputArray _m, OutputArray _b) {
+
+        // Create input mats
+        Mat a = _a.getMat(), m = _m.getMat();
+        CV_Assert(a.type() == CV_64F && m.type() == CV_8U);
+
+        // Create reduced mat
+        Mat1d a_;
+
+        for (int i = 0; i < a.rows; i++) {
+            if (m.at<bool>(i, 0)) {
+                a_.push_back(a.at<double>(i, 0));
+            }
+        }
+
+        a_.copyTo(_b);
+    }
+
     /* FILTERS */
 
     // Subtract mean and divide by standard deviation
@@ -57,11 +190,18 @@ namespace cv {
         meanStdDev(b, mean, stdDev);
         b = (b - mean[0]) / stdDev[0];
     }
-    
+
     // Eliminate jumps
-    void denoise(InputArray _a, OutputArray _b, Mat &jumps) {
+    void denoise(InputArray _a, InputArray _jumps, OutputArray _b) {
 
         Mat a = _a.getMat().clone();
+        Mat jumps = _jumps.getMat().clone();
+
+        CV_Assert(a.type() == CV_64F && jumps.type() == CV_8U);
+
+        if (jumps.rows != a.rows) {
+            jumps.rowRange(jumps.rows-a.rows, jumps.rows).copyTo(jumps);
+        }
 
         Mat diff;
         subtract(a.rowRange(1, a.rows), a.rowRange(0, a.rows-1), diff);
@@ -76,7 +216,7 @@ namespace cv {
 
         a.copyTo(_b);
     }
-    
+
     // Advanced detrending filter based on smoothness priors approach (High pass equivalent)
     void detrend(InputArray _a, OutputArray _b, int lambda) {
 
@@ -105,7 +245,7 @@ namespace cv {
             cv::blur(b, b, Size(s, s));
         }
     }
-    
+
     // Bandpass filter
     void bandpass(cv::InputArray _a, cv::OutputArray _b, double low, double high) {
 
@@ -130,24 +270,26 @@ namespace cv {
             frequencyToTime(frequencySpectrum, _b);
         }
     }
-    
+
     void butterworth_lowpass_filter(Mat &filter, double cutoff, int n) {
         CV_DbgAssert(cutoff > 0 && n > 0 && filter.rows % 2 == 0 && filter.cols % 2 == 0);
-        
+
         Mat tmp = Mat(filter.rows, filter.cols, CV_32F);
+        //Point centre = Point(filter.rows / 2, filter.cols / 2);
         double radius;
-        
+
         for (int i = 0; i < filter.rows; i++) {
             for (int j = 0; j < filter.cols; j++) {
                 radius = i;
+                //radius = (double)sqrt(pow((i - centre.x), 2.0) + pow((double) (j - centre.y), 2.0));
                 tmp.at<float>(i, j) = (float)(1 / (1 + pow(radius / cutoff, 2 * n)));
             }
         }
-        
+
         Mat toMerge[] = {tmp, tmp};
         merge(toMerge, 2, filter);
     }
-    
+
     void butterworth_bandpass_filter(Mat &filter, double cutin, double cutoff, int n) {
         CV_DbgAssert(cutoff > 0 && cutin < cutoff && n > 0 &&
                      filter.rows % 2 == 0 && filter.cols % 2 == 0);
@@ -157,7 +299,7 @@ namespace cv {
         butterworth_lowpass_filter(in, cutin, n);
         filter = off - in;
     }
-    
+
     void timeToFrequency(InputArray _a, OutputArray _b, bool magnitude) {
 
         // Prepare planes

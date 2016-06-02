@@ -29,11 +29,15 @@ namespace cv {
     double getFps(cv::Mat &t, const double timeBase);
     void push(cv::Mat &m);
     void plot(cv::Mat &mat);
+    bool * validate(InputArray _a, InputArray _b, bool flags[]);
+    bool validate(InputArray _a, InputArray _b, bool &flag);
+    void crop(InputArray _s, InputArray _v, OutputArray _r, bool mode[]);
+    void crop1(InputArray _a, InputArray _m, OutputArray _b);
     
     /* FILTERS */
 
     void normalization(cv::InputArray _a, cv::OutputArray _b);
-    void denoise(cv::InputArray _a, cv::OutputArray _b, cv::Mat &jumps);
+    void denoise(cv::InputArray _a, cv::InputArray _jumps, cv::OutputArray _b);
     void detrend(cv::InputArray _a, cv::OutputArray _b, int lambda);
     void movingAverage(cv::InputArray _a, cv::OutputArray _b, int n, int s);
     void bandpass(cv::InputArray _a, cv::OutputArray _b, double low, double high);

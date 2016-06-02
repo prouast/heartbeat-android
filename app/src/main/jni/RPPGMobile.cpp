@@ -26,6 +26,7 @@ using namespace std;
 #define SEC_PER_MIN 60
 
 #define MAX_CORNERS 10
+#define MIN_CORNERS 5
 #define QUALITY_LEVEL 0.01
 #define MIN_DISTANCE 10
 
@@ -103,7 +104,7 @@ void RPPGMobile::processFrame(cv::Mat &frameRGB, cv::Mat &frameGray, int64_t tim
         lastScanTime = time;
         detectFace(frameRGB, frameGray);
         rescanFlag = true;
-        
+
     } else {
         
         LOGD("Tracking face");
@@ -114,18 +115,18 @@ void RPPGMobile::processFrame(cv::Mat &frameRGB, cv::Mat &frameGray, int64_t tim
     if (faceValid) {
         
         fps = getFps(t, timeBase);
-        
+
         // Remove old values from buffer
         while (s.rows > fps * MAX_SIGNAL_SIZE) {
             push(s);
-            push(v);
+            //push(v);
             push(t);
             push(re);
         }
 
         // New values
         Scalar means = mean(frameRGB, mask);
-        
+
         // Add new values to raw signal buffer
         double values[] = {means(0), means(1), means(2)};
         s.push_back(Mat(1, 3, CV_64F, values));
@@ -135,17 +136,17 @@ void RPPGMobile::processFrame(cv::Mat &frameRGB, cv::Mat &frameGray, int64_t tim
         re.push_back<bool>(rescanFlag);
 
         // Validate signal
-        v.push_back(Mat(1, 3, CV_8U, validate(s, v, s_flags)));
+        //v.push_back(Mat(1, 3, CV_8U, validate(s, v, s_flags)));
 
         // Crop signal to valid part at end
-        crop(s, v, s_v, mode);
+        //crop(s, v, s_v, mode);
 
         // Update fps
         fps = getFps(t, timeBase);
         
         // If valid signal is large enough: estimate
         if (s.rows / fps >= MIN_SIGNAL_SIZE) {
-            
+
             // Apply filters
             extractSignal_den_detr_mean();
             //extractSignal();
@@ -178,12 +179,11 @@ void RPPGMobile::detectFace(cv::Mat &frameRGB, cv::Mat &frameGray) {
         detectCorners(frameGray);
         updateMask(frameGray);
         faceValid = true;
-        
+
     } else {
         
         LOGD("Found no face");
-        
-        faceValid = false;
+        invalidateFace();
     }
 }
 
@@ -234,7 +234,7 @@ void RPPGMobile::detectCorners(cv::Mat &frameGray) {
 void RPPGMobile::trackFace(cv::Mat &frameGray) {
     
     // Make sure enough corners are available
-    if (corners.size() < 3) {
+    if (corners.size() < MIN_CORNERS) {
         detectCorners(frameGray);
     }
 
@@ -262,7 +262,7 @@ void RPPGMobile::trackFace(cv::Mat &frameGray) {
         }
     }
 
-    if (corners_1v.size() > 3) {
+    if (corners_1v.size() >= MIN_CORNERS) {
 
         // Save updated features
         corners = corners_1v;
@@ -278,18 +278,12 @@ void RPPGMobile::trackFace(cv::Mat &frameGray) {
         cv::transform(boxCoords, transformedBoxCoords, transform);
         box = Rect(transformedBoxCoords[0], transformedBoxCoords[1]);
 
-        // Update ROI
-        Contour2f roiCoords;
-        roiCoords.push_back(roi.tl());
-        roiCoords.push_back(roi.br());
-        Contour2f transformedRoiCoords;
-        cv::transform(roiCoords, transformedRoiCoords, transform);
-        roi = Rect(transformedRoiCoords[0], transformedRoiCoords[1]);
+        updateMask(frameGray);
 
     } else {
 
-        // Detect new corners and skip step
-        detectCorners(frameGray);
+        LOGD("Tracking failed! Not enough corners left.");
+        invalidateFace();
     }
 }
 
@@ -297,10 +291,19 @@ void RPPGMobile::updateMask(cv::Mat &frameGray) {
     
     LOGD("Update mask");
 
-    mask = cv::Mat::zeros(frameGray.rows, frameGray.cols, CV_8UC1);
+    mask = cv::Mat::zeros(frameGray.rows, frameGray.cols, CV_8U);
+
     this->roi = Rect(Point(box.tl().x + 0.3 * box.width, box.tl().y + 0.1 * box.height),
                      Point(box.tl().x + 0.7 * box.width, box.tl().y + 0.25 * box.height));
+
     rectangle(mask, this->roi, WHITE, FILLED);
+}
+
+void RPPGMobile::invalidateFace() {
+
+    s = Mat1d();
+    t = Mat1d();
+    faceValid = false;
 }
 
 /*
@@ -381,7 +384,7 @@ void RPPGMobile::extractSignal_den_detr_mean() {
 
     // Denoise
     Mat signalDenoised;
-    denoise(s_v.col(1), re, signalDenoised);
+    denoise(s.col(1), re, signalDenoised);
 
     // Detrend
     Mat signalDetrended;
@@ -400,7 +403,7 @@ void RPPGMobile::extractSignal_den_detr_mean() {
         log.open(filepath.str().c_str());
         log << "g;g_den;g_detr;g_avg\n";
         for (int i = 0; i < s.rows; i++) {
-            log << s_v.at<double>(i, 1) << ";";
+            log << s.at<double>(i, 1) << ";";
             log << signalDenoised.at<double>(i, 0) << ";";
             log << signalDetrended.at<double>(i, 0) << ";";
             log << signalMeaned.at<double>(i, 0) << "\n";
@@ -595,9 +598,9 @@ void RPPGMobile::draw(cv::Mat &frameRGB) {
     }
 
     // Draw noise warning
-    if (!((mode[0] ? v.at<bool>(v.rows-1, 0) : true) &&
-        (mode[1] ? v.at<bool>(v.rows-1, 1) : true) &&
-        (mode[2] ? v.at<bool>(v.rows-1, 2) : true))) {
-        circle(frameRGB, Point(box.tl().x, box.br().y + 60), 10, cv::RED, -1, 8, 0);
-    }
+    //if (!((mode[0] ? v.at<bool>(v.rows-1, 0) : true) &&
+    //    (mode[1] ? v.at<bool>(v.rows-1, 1) : true) &&
+    //    (mode[2] ? v.at<bool>(v.rows-1, 2) : true))) {
+    //    circle(frameRGB, Point(box.tl().x, box.br().y + 60), 10, cv::RED, -1, 8, 0);
+    //}
 }

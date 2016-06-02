@@ -49,6 +49,7 @@ private:
     void extractSignal_den_detr_mean();
     void estimateHeartrate();
     void draw(cv::Mat &frameRGB);
+    void invalidateFace();
 
     void callback(int64_t now, double meanBpm, double minBpm, double maxBpm);   // Callback to Java
 
@@ -93,12 +94,7 @@ private:
     cv::Mat1d t;
     cv::Mat1b re;
 
-    // Signal validation
-    cv::Mat1b v;
-    bool s_flags[3] = {false, false, false};
-
-    // Valid signal and estimation
-    cv::Mat1d s_v;
+    // Estimation
     cv::Mat1d s_f;
     cv::Mat1d bpms;
     cv::Mat1d powerSpectrum;

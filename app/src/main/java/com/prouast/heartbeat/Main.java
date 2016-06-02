@@ -294,6 +294,9 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
         // Retrieve timestamp
         now = System.currentTimeMillis();
 
+        mRgba.release();
+        mGray.release();
+
         // Get RGBA and Gray versions
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
