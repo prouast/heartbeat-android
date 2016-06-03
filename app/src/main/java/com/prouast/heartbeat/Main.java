@@ -292,6 +292,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 
         // Retrieve timestamp
+        // This is where the timestamp for each video frame originates
         now = System.currentTimeMillis();
 
         mRgba.release();
@@ -307,6 +308,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
         }
 
         // Send the frame to rPPG for processing
+        // To C++
         rPPG.processFrame(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr(), now);
 
         return mRgba;
@@ -336,14 +338,16 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
 
     /**
      * Called when a result from the HRM is delivered
+     * Called from C++
      * @param result the RPPGResult
      */
     public void onRPPGResult(RPPGResult result) {
+
         // Push the result to the queue
         if (client.isActive) {
             queue.push(result);
         }
-        Log.i(TAG, "RPPGResult: " + result.getMean());
+        Log.i(TAG, "RPPGResult: " + result.getTime() + " – " + result.getMean());
     }
 
     /* NetworkClientStateListener methods */

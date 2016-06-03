@@ -467,7 +467,7 @@ void RPPGMobile::estimateHeartrate() {
         minBpm = bpms.at<double>(0, 0);
         maxBpm = bpms.at<double>(bpms.rows-1, 0);
 
-        callback(now, meanBpm, minBpm, maxBpm);
+        callback(time, meanBpm, minBpm, maxBpm);
 
         // Logging
         logfile << time << ";";
@@ -479,7 +479,7 @@ void RPPGMobile::estimateHeartrate() {
     }
 }
 
-void RPPGMobile::callback(int64_t now, double meanBpm, double minBpm, double maxBpm) {
+void RPPGMobile::callback(int64_t time, double meanBpm, double minBpm, double maxBpm) {
 
     JNIEnv *jenv;
     int stat = jvm->GetEnv((void **)&jenv, JNI_VERSION_1_6);
@@ -506,7 +506,7 @@ void RPPGMobile::callback(int64_t now, double meanBpm, double minBpm, double max
     jmethodID constructorMethodID = jenv->GetMethodID(returnObjectClassRef, "<init>", "(JDDD)V");
 
     // Create Info class
-    jobject returnObject = jenv->NewObject(returnObjectClassRef, constructorMethodID, now, meanBpm, minBpm, maxBpm);
+    jobject returnObject = jenv->NewObject(returnObjectClassRef, constructorMethodID, (jlong)time, meanBpm, minBpm, maxBpm);
 
     // Listener
 
