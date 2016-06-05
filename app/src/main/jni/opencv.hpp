@@ -17,9 +17,9 @@
 namespace cv {
     
     const Scalar BLACK    (  0,   0,   0);
-    const Scalar BLUE     (255,   0,   0);
+    const Scalar RED     (255,   0,   0);
     const Scalar GREEN    (  0, 255,   0);
-    const Scalar RED      (  0,   0, 255);
+    const Scalar BLUE      (  0,   0, 255);
     const Scalar WHITE    (255, 255, 255);
     const Scalar ZERO     (0);
     const Scalar ONE      (1);
@@ -33,7 +33,9 @@ namespace cv {
     bool validate(InputArray _a, InputArray _b, bool &flag);
     void crop(InputArray _s, InputArray _v, OutputArray _r, bool mode[]);
     void crop1(InputArray _a, InputArray _m, OutputArray _b);
-    
+    double weightedMeanIndex(InputArray _a, int low, int high);
+    double weightedSquaresMeanIndex(InputArray _a, int low, int high);
+
     /* FILTERS */
 
     void normalization(cv::InputArray _a, cv::OutputArray _b);

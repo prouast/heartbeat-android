@@ -27,7 +27,7 @@ public:
     bool load(jobject listener, JNIEnv *jenv,                                   // Listener and environment for Java callback
               const int width, const int height,
               const double timeBase,
-              const int samplingFrequency, const int rescanInterval,
+              const double samplingFrequency, const double rescanFrequency,
               const std::string &logFileName,
               const std::string &classifierFilename,
               const bool log, const bool draw);
@@ -45,7 +45,8 @@ private:
     void detectCorners(cv::Mat &frameGray);
     void trackFace(cv::Mat &frameGray);
     void updateMask(cv::Mat &frameGray);
-    void extractSignal();
+    void updateROI();
+    void extractSignal_xminay();
     void extractSignal_den_detr_mean();
     void estimateHeartrate();
     void draw(cv::Mat &frameRGB);
@@ -64,8 +65,8 @@ private:
     
     // Settings
     cv::Size minFaceSize;
-    double rescanInterval;
-    int samplingFrequency;
+    double rescanFrequency;
+    double samplingFrequency;
     double timeBase;
     bool logMode;
     bool drawMode;
@@ -86,7 +87,7 @@ private:
     
     // Mask
     cv::Rect box;
-    cv::Mat mask;
+    cv::Mat1b mask;
     cv::Rect roi;
 
     // Raw signal
@@ -97,10 +98,14 @@ private:
     // Estimation
     cv::Mat1d s_f;
     cv::Mat1d bpms;
+    //cv::Mat1d bpms_ws;
     cv::Mat1d powerSpectrum;
     double meanBpm;
     double minBpm;
     double maxBpm;
+    //double meanBpm_ws;
+    //double minBpm_ws;
+    //double maxBpm_ws;
     
     // Logfiles
     std::ofstream logfile;

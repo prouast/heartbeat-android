@@ -11,15 +11,6 @@ include $(BUILD_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 OPENCV_INSTALL_MODULES:=on
 include /Users/prouast/Library/Android/sdk/ndk-bundle/sources/OpenCV-android-sdk/sdk/native/jni/OpenCV.mk
-LOCAL_MODULE := RPPGSimple
-LOCAL_SRC_FILES := RPPGSimple.cpp opencv.cpp com_prouast_heartbeat_RPPGSimple.cpp
-LOCAL_C_INCLUDES += $(LOCAL_PATH)
-LOCAL_LDLIBS := -llog -ldl
-include $(BUILD_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
-OPENCV_INSTALL_MODULES:=on
-include /Users/prouast/Library/Android/sdk/ndk-bundle/sources/OpenCV-android-sdk/sdk/native/jni/OpenCV.mk
 LOCAL_MODULE := RPPGMobile
 LOCAL_SRC_FILES := RPPGMobile.cpp opencv.cpp com_prouast_heartbeat_RPPGMobile.cpp
 LOCAL_C_INCLUDES += $(LOCAL_PATH)
