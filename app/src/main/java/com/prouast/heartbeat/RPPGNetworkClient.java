@@ -130,7 +130,7 @@ public class RPPGNetworkClient implements Runnable {
                             case TIME_SYNC:
                                 Log.i(TAG, "Received time synchronisation request");
                                 long timeSentByServer = dis.readLong();
-                                respondTimeSync(timeReceivedByClient - timeSentByServer);
+                                respondTimeSync(timeReceivedByClient - timeSentByServer, timeReceivedByClient);
                                 Log.i(TAG, "Answered time synchronisation request");
                                 break;
 
@@ -183,11 +183,13 @@ public class RPPGNetworkClient implements Runnable {
         byte[] min = toByteArray(result.getMin());
         byte[] max = toByteArray(result.getMax());
         byte[] time = toByteArray(result.getTime());
-        byte[] msg = new byte[mean.length + min.length + max.length + time.length];
+        byte[] processingTime = toByteArray(System.currentTimeMillis() - result.getTime());
+        byte[] msg = new byte[mean.length + min.length + max.length + time.length + processingTime.length];
         System.arraycopy(mean, 0, msg, 0,                                     mean.length);
         System.arraycopy(min,  0, msg, mean.length,                           min.length);
         System.arraycopy(max,  0, msg, mean.length + min.length,              max.length);
         System.arraycopy(time, 0, msg, mean.length + min.length + max.length, time.length);
+        System.arraycopy(processingTime, 0, msg, mean.length + min.length + max.length + time.length, processingTime.length); // luke: added the time it took from processing to sending the results of a frame
         sendMsg(msg, RPPGNetworkMessageType.HEARTRATE);
     }
 
@@ -196,12 +198,15 @@ public class RPPGNetworkClient implements Runnable {
      * @param offset The offset calculated from time sync request
      * @throws IOException
      */
-    private void respondTimeSync(long offset) throws IOException {
+    private void respondTimeSync(long offset, long timeReceivedByClient) throws IOException {
         byte[] offset1 = toByteArray(offset);
         byte[] tClient = toByteArray(System.currentTimeMillis());
-        byte[] msg = new byte[offset1.length + tClient.length];
+        byte[] processingTimeSyncRequest = toByteArray((System.currentTimeMillis()-timeReceivedByClient));
+        byte[] msg = new byte[offset1.length + tClient.length + processingTimeSyncRequest.length];
+        Log.i(TAG, "offset=" + offset);
         System.arraycopy(offset1, 0, msg, 0,              offset1.length);
         System.arraycopy(tClient, 0, msg, offset1.length, tClient.length);
+        System.arraycopy(processingTimeSyncRequest, 0, msg, tClient.length + offset1.length, processingTimeSyncRequest.length); // luke: added the time for processing the TimeSynch request
         sendMsg(msg, RPPGNetworkMessageType.TIME_SYNC);
     }
 

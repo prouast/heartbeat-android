@@ -41,7 +41,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
     private static final int RESCAN_INTERVAL = 1;
     private static final boolean LOG = false;
     private static final boolean VIDEO = false;
-    private static final boolean DRAW = true;
+    private static final boolean DRAW = false;
     private static final int VIDEO_BITRATE = 100000;
 
     /* Constants */

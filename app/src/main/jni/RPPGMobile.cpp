@@ -68,14 +68,14 @@ bool RPPGMobile::load(jobject listener, JNIEnv *jenv,
     std::ostringstream path_2;
     path_2 << logfilepath << "_bpm.csv";
     logfile.open(path_2.str().c_str());
-    logfile << "time;mean;min;max\n";
+    logfile << "time;face_valid;mean;min;max\n";
     logfile.flush();
     
     // Logging bpm detailed
     std::ostringstream path_3;
     path_3 << logfilepath << "_bpmDetailed.csv";
     logfileDetailed.open(path_3.str().c_str());
-    logfileDetailed << "time;bpm\n";
+    logfileDetailed << "time;face_valid;bpm\n";
     logfileDetailed.flush();
 
     return true;
@@ -157,10 +157,12 @@ void RPPGMobile::processFrame(cv::Mat &frameRGB, cv::Mat &frameGray, int64_t tim
         }
     }
 
+    log();
+
     if (!drawMode) {
         // Indicator
         frameRGB.setTo(cv::BLACK);
-        circle(frameRGB, Point(1250, 100), 25, faceValid ? cv::GREEN : cv::RED, -1, 8, 0);
+        //circle(frameRGB, Point(1250, 100), 25, faceValid ? cv::GREEN : cv::RED, -1, 8, 0);
     }
 
     rescanFlag = false;
@@ -218,9 +220,9 @@ void RPPGMobile::detectCorners(cv::Mat &frameGray) {
     points[0][1] = Point(box.tl().x + 0.78 * box.width,
                          box.tl().y + 0.21 * box.height);
     points[0][2] = Point(box.tl().x + 0.70 * box.width,
-                         box.tl().y + 0.60 * box.height);
+                         box.tl().y + 0.50 * box.height);
     points[0][3] = Point(box.tl().x + 0.30 * box.width,
-                         box.tl().y + 0.60 * box.height);
+                         box.tl().y + 0.50 * box.height);
     const Point *pts[1] = {points[0]};
     int npts[] = {4};
     cv::fillPoly(trackingRegion, pts, npts, 1, cv::WHITE);
@@ -441,7 +443,7 @@ void RPPGMobile::estimateHeartrate() {
         minMaxLoc(powerSpectrum, &min, &max, &pmin, &pmax, bandMask);
 
         // calculate BPM
-        double bpm = pmax.y * fps / total * SEC_PER_MIN;
+        bpm = pmax.y * fps / total * SEC_PER_MIN;
         bpms.push_back(bpm);
 
         // calculate BPM based on weighted squares power spectrum
@@ -467,12 +469,13 @@ void RPPGMobile::estimateHeartrate() {
             log.close();
         }
 
-        logfileDetailed << time << ";";
-        logfileDetailed << bpm << "\n";
-        logfileDetailed.flush();
+        //logfileDetailed << time << ";";
+        //logfileDetailed << faceValid << ";";
+        //logfileDetailed << bpm << "\n";
+        //logfileDetailed.flush();
     }
 
-    if ((time - lastSamplingTime) * timeBase >= samplingFrequency) {
+    if ((time - lastSamplingTime) * timeBase >= 1/samplingFrequency) {
         lastSamplingTime = time;
 
         cv::sort(bpms, bpms, SORT_EVERY_COLUMN);
@@ -490,15 +493,33 @@ void RPPGMobile::estimateHeartrate() {
         callback(time, meanBpm, minBpm, maxBpm);
 
         // Logging
-        logfile << time << ";";
-        logfile << meanBpm << ";";
-        logfile << minBpm << ";";
-        logfile << maxBpm << "\n";
-        logfile.flush();
+        //logfile << time << ";";
+        //logfile << faceValid << ";";
+        //logfile << meanBpm << ";";
+        //logfile << minBpm << ";";
+        //logfile << maxBpm << "\n";
+        //logfile.flush();
 
         bpms.pop_back(bpms.rows);
         //bpms_ws.pop_back(bpms_ws.rows);
     }
+}
+
+void RPPGMobile::log() {
+
+    if (lastSamplingTime == time || lastSamplingTime == 0) {
+        logfile << time << ";";
+        logfile << faceValid << ";";
+        logfile << meanBpm << ";";
+        logfile << minBpm << ";";
+        logfile << maxBpm << "\n";
+        logfile.flush();
+    }
+
+    logfileDetailed << time << ";";
+    logfileDetailed << faceValid << ";";
+    logfileDetailed << bpm << "\n";
+    logfileDetailed.flush();
 }
 
 void RPPGMobile::callback(int64_t time, double meanBpm, double minBpm, double maxBpm) {
