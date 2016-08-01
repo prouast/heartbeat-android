@@ -34,14 +34,18 @@ import java.util.regex.Pattern;
 /**
  * The main class.
  */
-public class Main extends AppCompatActivity implements CvCameraViewListener2, RPPGMobile.RPPGListener, RPPGNetworkClient.NetworkClientStateListener {
+public class Main extends AppCompatActivity implements CvCameraViewListener2, RPPG.RPPGListener, RPPGNetworkClient.NetworkClientStateListener {
 
     /* Settings */
-    private static final int SAMPLING_FREQUENCY = 1;
-    private static final int RESCAN_INTERVAL = 1;
+    private static final RPPG.RPPGAlgorithm ALGORITHM = RPPG.RPPGAlgorithm.g;
+    private static final double SAMPLING_FREQUENCY = 1;
+    private static final double RESCAN_FREQUENCY = 1;
+    private static final double TIME_BASE = 0.001;
+    private static final int MIN_SIGNAL_SIZE = 2;
+    private static final int MAX_SIGNAL_SIZE = 6;
     private static final boolean LOG = false;
     private static final boolean VIDEO = false;
-    private static final boolean DRAW = false;
+    private static final boolean GUI = true;
     private static final int VIDEO_BITRATE = 100000;
 
     /* Constants */
@@ -51,11 +55,11 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
                     "((25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[0-9])){0,1}$");
 
     private CameraBridgeViewBase mOpenCvCameraView;
-    private RPPGMobile rPPG;
+    private RPPG rPPG;
     private RPPGResultQueue queue;
     private Mat mRgba;
     private Mat mGray;
-    private long now;
+    private long time;
 
     private FFmpegEncoder encoder;
     private File videoFile;
@@ -73,9 +77,9 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
                     Log.i(TAG, "OpenCV loaded successfully");
 
                     // Load native library after(!) OpenCV initialization
-                    System.loadLibrary("RPPGMobile");
+                    System.loadLibrary("RPPG");
 
-                    rPPG = new RPPGMobile();
+                    rPPG = new RPPG();
 
                     mOpenCvCameraView.enableView();
                 } break;
@@ -272,10 +276,11 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
         // Initialise rPPG
 
         try {
-            rPPG.load(this, width, height, SAMPLING_FREQUENCY, RESCAN_INTERVAL,
+            rPPG.load(this, ALGORITHM, width, height, TIME_BASE, 1,
+                    SAMPLING_FREQUENCY, RESCAN_FREQUENCY, MIN_SIGNAL_SIZE, MAX_SIGNAL_SIZE,
                     getApplicationContext().getExternalFilesDir(null).getAbsolutePath(),
                     loadCascadeFile(cascadeDir, R.raw.haarcascade_frontalface_alt, "haarcascade_frontalface_alt.xml"),
-                    LOG, DRAW);
+                    LOG, GUI);
             Log.i(TAG, "Loaded rPPG");
         } catch (IOException e) {
             Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
@@ -293,7 +298,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
 
         // Retrieve timestamp
         // This is where the timestamp for each video frame originates
-        now = System.currentTimeMillis();
+        time = System.currentTimeMillis();
 
         mRgba.release();
         mGray.release();
@@ -304,12 +309,12 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2, RP
 
         // Write frame to video
         if (VIDEO) {
-            encoder.writeFrame(mRgba.dataAddr(), now);
+            encoder.writeFrame(mRgba.dataAddr(), time);
         }
 
         // Send the frame to rPPG for processing
         // To C++
-        rPPG.processFrame(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr(), now);
+        rPPG.processFrame(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr(), time);
 
         return mRgba;
     }

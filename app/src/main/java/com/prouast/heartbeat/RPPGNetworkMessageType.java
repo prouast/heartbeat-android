@@ -17,7 +17,9 @@ public enum RPPGNetworkMessageType {
     TIME_SYNC,
 
     // Server tells client to stop
-    STOP;
+    STOP,
+
+    INVALID;
 
     private static final String TAG = "Heartbeat::HRMNtwMsgTpe";
     private static final RPPGNetworkMessageType[] values = RPPGNetworkMessageType.values();
@@ -35,6 +37,6 @@ public enum RPPGNetworkMessageType {
             Log.e(TAG, "Exception when trying to access ordinal value " + i + ": " + e);
             e.printStackTrace();
         }
-        return HEARTBEAT;
+        return INVALID;
     }
 }

@@ -178,7 +178,7 @@ public class RPPGNetworkClient implements Runnable {
      * @param result The RPPGResult
      * @throws IOException
      */
-    private void sendHeartrate(RPPGResult result) throws IOException {
+    private synchronized void sendHeartrate(RPPGResult result) throws IOException {
         byte[] mean = toByteArray(result.getMean());
         byte[] min = toByteArray(result.getMin());
         byte[] max = toByteArray(result.getMax());
@@ -198,7 +198,7 @@ public class RPPGNetworkClient implements Runnable {
      * @param offset The offset calculated from time sync request
      * @throws IOException
      */
-    private void respondTimeSync(long offset, long timeReceivedByClient) throws IOException {
+    private synchronized void respondTimeSync(long offset, long timeReceivedByClient) throws IOException {
         byte[] offset1 = toByteArray(offset);
         byte[] tClient = toByteArray(System.currentTimeMillis());
         byte[] processingTimeSyncRequest = toByteArray((System.currentTimeMillis()-timeReceivedByClient));

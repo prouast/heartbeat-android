@@ -7,9 +7,9 @@
 //
 
 #include "opencv.hpp"
-#include <limits>
 
-#include "opencv2/highgui/highgui.hpp"
+#include <limits>
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 using namespace std;
@@ -45,139 +45,6 @@ namespace cv {
             cv::imshow("plot", mat);
             if (waitKey(30) >= 0) break;
         }
-    }
-
-    bool * validate(InputArray _a, InputArray _b, bool flags[]) {
-
-        static bool result[3] = {true, true, true};
-
-        Mat a = _a.getMat(), b = _b.getMat();
-
-        if (a.rows < 10) {
-            return result;
-        }
-
-        for (int i = 0; i < a.cols; i++) {
-            result[i] = validate(a.col(i), b.col(i), flags[i]);
-        }
-
-        return result;
-    }
-
-    bool validate(InputArray _a, InputArray _b, bool &flag) {
-
-        Mat a = _a.getMat(), b = _b.getMat();
-
-        CV_Assert(a.type() == CV_64F && b.type() == CV_8U);
-
-        // Calculate differences
-        Mat1d diff;
-        subtract(a.rowRange(1, a.rows), a.rowRange(0, a.rows-1), diff);
-
-        // Calculate sd of differences
-        Scalar mean_diff;
-        Scalar stddev_diff;
-        Mat mask = Mat::ones(diff.rows, diff.cols, CV_8UC1);
-        mask.at<bool>(mask.rows-1, 0) = false;
-        meanStdDev(diff, mean_diff, stddev_diff, mask);
-
-        // Last frame was classified as good
-        if (b.at<bool>(b.rows-1, 0)) {
-
-            // Latest deviation is larger than twice the standard deviation
-            if (abs(diff.at<double>(diff.rows-1)) > 2 * stddev_diff[0]) {
-
-                // Last deviation flagged as possibly noise
-                if (flag) {
-
-                    // Confirm noise
-                    flag = false; // reset flag
-                    std::cout << "there is noise" << std::endl;
-                    return false;
-
-                } else {
-
-                    // Flag as possibly noise
-                    flag = true; // set flag
-                    std::cout << "there might be noise" << std::endl;
-                    return true;
-                }
-
-            } else {
-
-                // No noise
-                flag = false; // reset flag
-                std::cout << "no noise" << std::endl;
-                return true;
-            }
-
-        } else {
-
-            // Latest deviation is larger than the standard deviation
-            if (abs(diff.at<double>(diff.rows-1)) > stddev_diff[0]) {
-
-                // Classify as noise
-                flag = false; // reset flag
-                std::cout << "still noise" << std::endl;
-                return false;
-
-            } else {
-
-                // Last deviation flagged as possibly no noise anymore
-                if (flag) {
-
-                    // Confirm that there is no noise anymore
-                    flag = false; // reset flag
-                    std::cout << "no noise anymore" << std::endl;
-                    return true;
-
-                } else {
-
-                    // Flag as possibly no noise anymore
-                    flag = true; // set flag
-                    std::cout << "noise might have stopped" << std::endl;
-                    return false;
-                }
-            }
-        }
-    }
-
-    void crop(InputArray _s, InputArray _v, OutputArray _r, bool mode[]) {
-
-        Mat s = _s.getMat(), v = _v.getMat();
-        CV_Assert(s.type() == CV_64F && v.type() == CV_8U);
-
-        Mat1d s_;
-
-        // Determine the valid range
-        int i = s.rows-1;
-        while ((mode[0] ? v.at<bool>(i, 0) : true) &&
-               (mode[1] ? v.at<bool>(i, 1) : true) &&
-               (mode[2] ? v.at<bool>(i, 2) : true) &&
-               i > 0) {
-            i--;
-        }
-
-        // Add valid range to cropped signal
-        s.rowRange(i, s.rows).copyTo(_r);
-    }
-
-    void crop1(InputArray _a, InputArray _m, OutputArray _b) {
-
-        // Create input mats
-        Mat a = _a.getMat(), m = _m.getMat();
-        CV_Assert(a.type() == CV_64F && m.type() == CV_8U);
-
-        // Create reduced mat
-        Mat1d a_;
-
-        for (int i = 0; i < a.rows; i++) {
-            if (m.at<bool>(i, 0)) {
-                a_.push_back(a.at<double>(i, 0));
-            }
-        }
-
-        a_.copyTo(_b);
     }
 
     double weightedMeanIndex(InputArray _a, int low, int high) {
@@ -257,7 +124,7 @@ namespace cv {
         Mat diff;
         subtract(a.rowRange(1, a.rows), a.rowRange(0, a.rows-1), diff);
 
-        for (int i = 0; i < jumps.rows; i++) {
+        for (int i = 1; i < jumps.rows; i++) {
             if (jumps.at<bool>(i, 0)) {
                 Mat mask = Mat::zeros(a.size(), CV_8U);
                 mask.rowRange(i, mask.rows).setTo(ONE);
@@ -273,18 +140,25 @@ namespace cv {
     // Advanced detrending filter based on smoothness priors approach (High pass equivalent)
     void detrend(InputArray _a, OutputArray _b, int lambda) {
 
-        Mat a = _a.total() == (size_t)_a.size().height ? _a.getMat() : _a.getMat().t();
-        if (a.total() < 3) {
+        Mat a = _a.getMat();
+        CV_Assert(a.type() == CV_64F);
+
+        // Number of rows
+        int rows = a.rows;
+
+        if (rows < 3) {
             a.copyTo(_b);
         } else {
-            int t = (int)a.total();
-            Mat i = Mat::eye(t, t, a.type());
+            // Construct I
+            Mat i = Mat::eye(rows, rows, a.type());
+            // Construct D2
             Mat d = Mat(Matx<double,1,3>(1, -2, 1));
-            Mat d2Aux = Mat::ones(t-2, 1, a.type()) * d;
-            Mat d2 = Mat::zeros(t-2, t, a.type());
+            Mat d2Aux = Mat::ones(rows-2, 1, a.type()) * d;
+            Mat d2 = Mat::zeros(rows-2, rows, a.type());
             for (int k = 0; k < 3; k++) {
                 d2Aux.col(k).copyTo(d2.diag(k));
             }
+            // Calculate b = (I - (I + λ^2 * D2^t*D2)^-1) * a
             Mat b = (i - (i + lambda * lambda * d2.t() * d2).inv()) * a;
             b.copyTo(_b);
         }
@@ -383,52 +257,56 @@ namespace cv {
         // Split into planes; plane 0 is output
         Mat outputPlanes[2];
         split(a, outputPlanes);
-        Mat output;
+        Mat output = Mat(a.rows, 1, a.type());
         normalize(outputPlanes[0], output, 0, 1, CV_MINMAX);
         output.copyTo(_b);
     }
 
-    void xminay(InputArray _r, InputArray _g, InputArray _b, double low, double high, OutputArray _s) {
+    void pcaComponent(cv::InputArray _a, cv::OutputArray _b, cv::OutputArray _pc, int low, int high) {
 
-        // Retrieve Mats
-        Mat r = _r.getMat();
-        Mat g = _g.getMat();
-        Mat b = _b.getMat();
+        Mat a = _a.getMat();
+        CV_Assert(a.type() == CV_64F);
 
-        // Normalize raw signals
-        Mat r_n = Mat(r.rows, r.cols, CV_32F);
-        Mat g_n = Mat(g.rows, g.cols, CV_32F);
-        Mat b_n = Mat(b.rows, b.cols, CV_32F);
-        normalization(r, r_n);
-        normalization(g, g_n);
-        normalization(b, b_n);
+        // Perform PCA
+        cv::PCA pca(a, cv::Mat(), CV_PCA_DATA_AS_ROW);
 
-        // Calculate X_s signal
-        Mat x_s = Mat(r.rows, r.cols, CV_32F);
-        addWeighted(r_n, 3, g_n, -2, 0, x_s);
+        // Calculate PCA components
+        cv::Mat pc = a * pca.eigenvectors.t();
 
-        // Calculate Y_s signal
-        Mat y_s = Mat(r.rows, r.cols, CV_32F);
-        addWeighted(r_n, 1.5, g_n, 1, 0, y_s);
-        addWeighted(y_s, 1, b_n, -1.5, 0, y_s);
+        // Band mask
+        const int total = a.rows;
+        Mat bandMask = Mat::zeros(a.rows, 1, CV_8U);
+        bandMask.rowRange(min(low, total), min(high, total) + 1).setTo(ONE);
 
-        // Bandpass
-        Mat x_f = Mat(r.rows, r.cols, CV_32F);
-        bandpass(x_s, x_f, low, high);
-        Mat y_f = Mat(r.rows, r.cols, CV_32F);
-        bandpass(y_s, y_f, low, high);
+        // Identify most distinct
+        std::vector<double> vals;
+        for (int i = 0; i < pc.cols; i++) {
+            cv::Mat magnitude = Mat(pc.rows, 1, CV_32F);
+            // Calculate spectral magnitudes
+            cv::timeToFrequency(pc.col(i), magnitude, true);
+            // Normalize
+            //printMat<float>("magnitude1", magnitude);
+            cv::normalize(magnitude, magnitude, 1, 0, NORM_L1, -1, bandMask);
+            //printMat<float>("magnitude2", magnitude);
+            // Grab index of max
+            double min, max;
+            Point pmin, pmax;
+            cv::minMaxLoc(magnitude, &min, &max, &pmin, &pmax, bandMask);
+            vals.push_back(max);
 
-        // Calculate alpha
-        Scalar mean_x_f;
-        Scalar stddev_x_f;
-        meanStdDev(x_f, mean_x_f, stddev_x_f);
-        Scalar mean_y_f;
-        Scalar stddev_y_f;
-        meanStdDev(y_f, mean_y_f, stddev_y_f);
-        double alpha = stddev_x_f.val[0]/stddev_y_f.val[0];
+        }
 
-        // Calculate signal
-        addWeighted(x_f, 1, y_f, -alpha, 0, _s);
+        // Select most distinct
+        int idx[2];
+        cv::minMaxIdx(vals, 0, 0, 0, &idx[0]);
+        if (idx[0] == -1) {
+            pc.col(1).copyTo(_b);
+        } else {
+            //pc.col(1).copyTo(_b);
+            pc.col(idx[1]).copyTo(_b);
+        }
+
+        pc.copyTo(_pc);
     }
     
     /* LOGGING */
