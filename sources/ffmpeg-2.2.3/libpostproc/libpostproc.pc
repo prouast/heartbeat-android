@@ -1,0 +1,14 @@
+prefix=/Users/prouast/Desktop/ffmpeg-2.2.3/android/arm
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libpostproc
+Description: FFmpeg postprocessing library
+Version: 52.3.100
+Requires: 
+Requires.private: libavutil = 52.66.100
+Conflicts:
+Libs: -L${libdir}  -lpostproc 
+Libs.private: 
+Cflags: -I${includedir}
