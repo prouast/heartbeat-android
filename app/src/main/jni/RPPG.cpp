@@ -342,8 +342,10 @@ void RPPG::updateMask(Mat &frameGray) {
 void RPPG::invalidateFace() {
 
     s = Mat1d();
+    s_f = Mat1d();
     t = Mat1d();
     re = Mat1b();
+    powerSpectrum = Mat1d();
     faceValid = false;
 }
 
